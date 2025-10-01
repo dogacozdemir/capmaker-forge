@@ -23,7 +23,13 @@ export const useKeyboardConfig = () => {
   const [editingKeyId, setEditingKeyId] = useState<string | null>(null);
   const [selectedLayerId, setSelectedLayerId] = useState<string | null>(null);
 
-  const { addLayer, deleteLayer, reorderLayer, updateLayer } = useLayerManagement(config, setConfig);
+  const { addLayer: originalAddLayer, deleteLayer, reorderLayer, updateLayer } = useLayerManagement(config, setConfig);
+
+  // Override addLayer to automatically select the new layer
+  const addLayer = useCallback((keyId: string, type: 'text' | 'image') => {
+    const newLayerId = originalAddLayer(keyId, type);
+    setSelectedLayerId(newLayerId);
+  }, [originalAddLayer]);
 
   const changeLayout = useCallback((layoutType: LayoutType) => {
     setConfig(prev => {

@@ -69,6 +69,11 @@ const DragSelection: React.FC<DragSelectionProps> = ({
   // Add global mouse event listeners for smooth dragging across UI elements
   useEffect(() => {
     const handleGlobalMouseMove = (e: MouseEvent) => {
+      // Don't handle mouse move if right button is pressed (panning)
+      if (e.buttons === 2) {
+        return;
+      }
+      
       if (isSelecting && selectionBox && containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
         const endX = e.clientX - rect.left;
@@ -88,7 +93,15 @@ const DragSelection: React.FC<DragSelectionProps> = ({
       }
     };
 
-    const handleGlobalMouseUp = () => {
+    const handleGlobalMouseUp = (e: MouseEvent) => {
+      // If right button was released, stop any ongoing selection
+      if (e.button === 2) {
+        setIsSelecting(false);
+        setSelectionBox(null);
+        setPreviewKeys([]);
+        return;
+      }
+      
       if (isSelecting && selectionBox) {
         // Use the preview keys as the final selection
         onKeysSelect(previewKeys);
@@ -111,6 +124,11 @@ const DragSelection: React.FC<DragSelectionProps> = ({
   }, [isSelecting, selectionBox, calculateIntersectingKeys, previewKeys, onKeysSelect]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    // Don't start selection on right click (button 2) - this is for panning
+    if (e.button === 2) {
+      return;
+    }
+    
     // Start selection on any mouse down, but only if not ctrl/cmd+click
     // Also check if the target is not an interactive element
     const target = e.target as HTMLElement;

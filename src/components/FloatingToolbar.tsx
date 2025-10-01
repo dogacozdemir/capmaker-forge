@@ -66,6 +66,16 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
   const [localRotation, setLocalRotation] = useState([0]);
   const [localFontSize, setLocalFontSize] = useState([14]);
 
+  // Sync local state with selectedLayer when it changes
+  useEffect(() => {
+    if (selectedLayer) {
+      setLocalPositionX([selectedLayer.offsetX || 0]);
+      setLocalPositionY([selectedLayer.offsetY || 0]);
+      setLocalRotation([selectedLayer.rotation || 0]);
+      setLocalFontSize([selectedLayer.fontSize || 14]);
+    }
+  }, [selectedLayer]);
+
   const fonts = [
     'Arial',
     'Helvetica',
@@ -86,24 +96,6 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
     '#808080', '#800000', '#008000', '#000080', '#808000', '#800080', '#008080', '#C0C0C0'
   ];
 
-  // Sync local state with editingKey when it changes
-  useEffect(() => {
-    if (editingKey) {
-      setLocalPositionX([editingKey.legendOffsetX || 0]);
-      setLocalPositionY([editingKey.legendOffsetY || 0]);
-      setLocalRotation([editingKey.legendRotation || 0]);
-      // Only update font size if the key has a specific font size set
-      if (editingKey.legendFontSize !== undefined) {
-        setLocalFontSize([editingKey.legendFontSize]);
-      }
-    } else {
-      // Reset to defaults when no key is selected
-      setLocalPositionX([0]);
-      setLocalPositionY([0]);
-      setLocalRotation([0]);
-      setLocalFontSize([14]);
-    }
-  }, [editingKey]);
 
   // Debounced update to parent component
   useEffect(() => {
@@ -164,15 +156,24 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
 
   const handlePositionXChange = useCallback((value: number[]) => {
     setLocalPositionX(value);
-  }, []);
+    if (editingKey && selectedLayer && onLayerUpdate) {
+      onLayerUpdate(editingKey.id, selectedLayer.id, { offsetX: value[0] });
+    }
+  }, [editingKey, selectedLayer, onLayerUpdate]);
 
   const handlePositionYChange = useCallback((value: number[]) => {
     setLocalPositionY(value);
-  }, []);
+    if (editingKey && selectedLayer && onLayerUpdate) {
+      onLayerUpdate(editingKey.id, selectedLayer.id, { offsetY: value[0] });
+    }
+  }, [editingKey, selectedLayer, onLayerUpdate]);
 
   const handleRotationChange = useCallback((value: number[]) => {
     setLocalRotation(value);
-  }, []);
+    if (editingKey && selectedLayer && onLayerUpdate) {
+      onLayerUpdate(editingKey.id, selectedLayer.id, { rotation: value[0] });
+    }
+  }, [editingKey, selectedLayer, onLayerUpdate]);
 
   const handleFontSizeChange = useCallback((value: number[]) => {
     setLocalFontSize(value);
@@ -417,6 +418,7 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
                 </div>
               </div>
             )}
+            
             
             {showYSlider && (
               <div className="absolute top-full mt-1 left-0 bg-card border border-border rounded-md shadow-elevated p-3 z-50 min-w-[180px]">

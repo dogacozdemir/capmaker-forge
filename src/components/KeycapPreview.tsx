@@ -1,6 +1,18 @@
 import React, { forwardRef } from 'react';
 import { KeycapConfig, KeycapLayer } from '@/types/keyboard';
 
+// Helper function to adjust color brightness
+const adjustColor = (color: string, amount: number): string => {
+  const num = parseInt(color.replace('#', ''), 16);
+  const amt = Math.round(2.55 * amount);
+  const R = (num >> 16) + amt;
+  const G = (num >> 8 & 0x00FF) + amt;
+  const B = (num & 0x0000FF) + amt;
+  return '#' + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+    (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+    (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
+};
+
 interface KeycapPreviewProps {
   keycap: KeycapConfig;
   selected: boolean;
@@ -23,10 +35,12 @@ const KeycapPreview = forwardRef<HTMLDivElement, KeycapPreviewProps>(
     ref
   ) => {
     const UNIT = 48 * scale;
-    const BORDER_RADIUS = 4 * scale;
+    const KEY_SPACING = 4 * scale; // Keycap'ler arası mesafe
+    const BORDER_RADIUS = 2 * scale; // Daha düz köşeler
+    const INNER_RADIUS = 6 * scale; // İç kare için daha yumuşak köşeler
 
-    const width = keycap.width * UNIT;
-    const height = keycap.height * UNIT;
+    const width = keycap.width * UNIT - KEY_SPACING;
+    const height = keycap.height * UNIT - KEY_SPACING;
 
     const renderLayer = (layer: KeycapLayer) => {
       const baseTransform = `
@@ -95,27 +109,25 @@ const KeycapPreview = forwardRef<HTMLDivElement, KeycapPreviewProps>(
       );
     };
 
+
     return (
       <div
         ref={ref}
         className={`
           absolute cursor-pointer transition-all duration-200 ease-out
-          border border-gray-300 shadow-lg
-          hover:shadow-xl hover:border-primary hover:ring-2 hover:ring-primary/40 hover:bg-primary/10
-          ${selected ? 'border-primary shadow-xl ring-2 ring-primary/50 bg-primary/15' : ''}
+          ${selected ? 'ring-2 ring-primary/50' : ''}
           ${
             previewSelected && !selected
-              ? 'border-primary/80 shadow-xl ring-2 ring-primary/40 bg-primary/12'
+              ? 'ring-2 ring-primary/40'
               : ''
           }
         `}
         style={{
-          left: keycap.x * UNIT,
-          top: keycap.y * UNIT,
+          left: keycap.x * UNIT + KEY_SPACING / 2,
+          top: keycap.y * UNIT + KEY_SPACING / 2,
           width,
           height,
           borderRadius: BORDER_RADIUS,
-          background: keycap.color || '#2D3748',
           transform: 'translateZ(1px)',
           zIndex: 1,
         }}
@@ -135,17 +147,33 @@ const KeycapPreview = forwardRef<HTMLDivElement, KeycapPreviewProps>(
           onDoubleClick();
         }}
       >
-        {keycap.layers?.map((layer) => renderLayer(layer))}
+        {/* Keycap base - darker version of selected color */}
+        <div
+          className="absolute inset-0"
+          style={{
+            borderRadius: BORDER_RADIUS,
+            background: adjustColor(keycap.color || '#ffffff', -20), // Seçilen rengin koyusu
+            border: '1px solid rgba(0, 0, 0, 0.15)',
+          }}
+        />
 
-        {/* Highlight effects */}
+        {/* Inner square - actual keycap color */}
         <div
-          className="absolute inset-x-1 top-1 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent"
-          style={{ borderRadius: BORDER_RADIUS }}
+          className="absolute"
+          style={{
+            top: 1.5 * scale,        // Yukarı: yakın
+            left: 6 * scale,       // Sol: uzak
+            right: 6 * scale,      // Sağ: uzak
+            bottom: 10 * scale,     // Aşağı: çok uzak
+            borderRadius: 6, // İç kare için daha yumuşak köşeler
+            background: keycap.color || '#ffffff', // Asıl keycap rengi
+          }}
         />
-        <div
-          className="absolute inset-x-1 top-2 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"
-          style={{ borderRadius: BORDER_RADIUS }}
-        />
+
+        {/* Content layer */}
+        <div className="absolute inset-0" style={{ borderRadius: BORDER_RADIUS }}>
+          {keycap.layers?.map((layer) => renderLayer(layer))}
+        </div>
       </div>
     );
   }

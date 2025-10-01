@@ -6,11 +6,13 @@ export const useLayerManagement = (
   setConfig: React.Dispatch<React.SetStateAction<KeyboardConfig>>
 ) => {
   const addLayer = useCallback((keyId: string, type: 'text' | 'image') => {
+    const newLayerId = `layer-${Date.now()}-${Math.random()}`;
+    
     setConfig(prev => {
       const updatedKeys = prev.layout.keys.map(key => {
         if (key.id === keyId) {
           const newLayer: KeycapLayer = {
-            id: `layer-${Date.now()}-${Math.random()}`,
+            id: newLayerId,
             type,
             content: type === 'text' ? 'New Text' : undefined,
             alignment: 'center',
@@ -41,6 +43,8 @@ export const useLayerManagement = (
         },
       };
     });
+    
+    return newLayerId;
   }, [setConfig]);
 
   const deleteLayer = useCallback((keyId: string, layerId: string) => {

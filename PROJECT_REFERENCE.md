@@ -750,3 +750,41 @@ import { KeyboardLayout } from '@/types/keyboard'
 - **DragSelection**: Simplified after removing background animation functionality
 - **Index.tsx**: Updated to work with new keyboard centering system
 - **Layout System**: Improved flexbox-based centering for consistent positioning
+
+## Latest Updates - Zoom & Pan System Implementation (January 2025)
+
+### Zoom & Pan System Features
+- **Mouse Wheel Zoom**: Smooth zoom in/out with mouse wheel (30% - 300% range)
+- **Right-Click Pan**: Drag keyboard around with right-click and drag
+- **Smart Zoom Point**: Zoom towards mouse cursor position for intuitive control
+- **Keyboard Shortcuts**: Ctrl+0 (reset), Ctrl+Plus (zoom in), Ctrl+Minus (zoom out)
+- **Control Panel**: Reset button and zoom percentage display in top-right corner
+- **Hardware Acceleration**: CSS transforms for smooth 60fps performance
+
+### DragSelection & Pan Coordination
+- **Right-Click Detection**: DragSelection now ignores right-click events to prevent conflicts
+- **Button State Checking**: Global mouse events check for right button state (buttons === 2)
+- **Clean Separation**: Left-click for drag selection, right-click for panning
+- **Event Coordination**: Proper event handling prevents drag selection during panning
+
+### KeyboardPreview Enhancements
+- **Transform System**: CSS transform-based zoom and pan with proper origin centering
+- **State Management**: Zoom and pan state with proper limits and bounds
+- **Event Listeners**: Global mouse and keyboard event handling with cleanup
+- **Visual Feedback**: Smooth transitions and real-time zoom percentage display
+- **Overflow Handling**: Proper container overflow management for pan boundaries
+
+### Technical Implementation Details
+- **Zoom Limits**: MIN_ZOOM (0.3) to MAX_ZOOM (3.0) with smooth scaling
+- **Pan Coordinates**: X/Y translation with proper mouse delta calculations
+- **Transform Origin**: Center-based scaling for natural zoom behavior
+- **Event Prevention**: Proper preventDefault() for wheel and context menu events
+- **Performance**: Hardware-accelerated CSS transforms with transition controls
+- **Responsive Design**: Works across all screen sizes and device types
+
+### User Experience Improvements
+- **Intuitive Controls**: Natural mouse interactions matching standard design tools
+- **Visual Feedback**: Clear zoom percentage and reset functionality
+- **Conflict Resolution**: No interference between drag selection and panning
+- **Smooth Animations**: 0.1s ease-out transitions for professional feel
+- **Accessibility**: Keyboard shortcuts for users who prefer keyboard navigation
