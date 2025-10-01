@@ -1,6 +1,7 @@
 import React from 'react';
-import { KeyboardLayout } from '@/types/keyboard';
+import { KeyboardLayout, KeycapLayer } from '@/types/keyboard';
 import KeycapPreview from './KeycapPreview';
+import KeyLayerPreview from './KeyLayerPreview';
 
 interface KeyboardPreviewProps {
   layout: KeyboardLayout;
@@ -9,6 +10,11 @@ interface KeyboardPreviewProps {
   onKeyDoubleClick: (keyId: string) => void;
   previewKeys?: string[];
   keyRefs?: React.MutableRefObject<Record<string, HTMLDivElement | null>>;
+  // Layer preview props
+  editingKeyId?: string | null;
+  currentKeyLayers?: KeycapLayer[];
+  selectedLayerId?: string | null;
+  onLayerSelect?: (layerId: string) => void;
 }
 
 const KeyboardPreview: React.FC<KeyboardPreviewProps> = ({
@@ -18,6 +24,10 @@ const KeyboardPreview: React.FC<KeyboardPreviewProps> = ({
   onKeyDoubleClick,
   previewKeys = [],
   keyRefs,
+  editingKeyId,
+  currentKeyLayers = [],
+  selectedLayerId,
+  onLayerSelect,
 }) => {
   const UNIT = 48;
   const PADDING = 32;
@@ -56,7 +66,32 @@ const KeyboardPreview: React.FC<KeyboardPreviewProps> = ({
           onClick={(event) => onKeySelect(keycap.id, event)}
           onDoubleClick={() => onKeyDoubleClick(keycap.id)}
         />
-      ))}
+        ))}
+        
+        {/* Layer Preview - Show above the selected key */}
+        {editingKeyId && currentKeyLayers.length > 0 && onLayerSelect && (
+          (() => {
+            const selectedKey = layout.keys.find(key => key.id === editingKeyId);
+            if (!selectedKey) return null;
+            
+            return (
+              <KeyLayerPreview
+                layers={currentKeyLayers}
+                selectedLayerId={selectedLayerId || null}
+                onLayerSelect={onLayerSelect}
+                onClose={() => onLayerSelect && onLayerSelect('')} // Close by clearing layer selection
+                keyPosition={{
+                  x: selectedKey.x * UNIT,
+                  y: selectedKey.y * UNIT,
+                  width: selectedKey.width * UNIT,
+                  height: selectedKey.height * UNIT,
+                }}
+                unit={UNIT}
+                padding={PADDING}
+              />
+            );
+          })()
+        )}
       </div>
     </div>
   );

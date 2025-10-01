@@ -12,7 +12,7 @@ export const useLayerManagement = (
           const newLayer: KeycapLayer = {
             id: `layer-${Date.now()}-${Math.random()}`,
             type,
-            content: type === 'text' ? 'New Text' : '',
+            content: type === 'text' ? 'New Text' : undefined,
             alignment: 'center',
             verticalAlignment: 'center',
             fontSize: 14,

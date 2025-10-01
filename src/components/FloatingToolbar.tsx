@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -27,6 +27,7 @@ import {
   MoveVertical,
   MoveHorizontal
 } from 'lucide-react';
+import { KeycapLayer } from '@/types/keyboard';
 
 interface FloatingToolbarProps {
   selectedColor: string;
@@ -35,8 +36,9 @@ interface FloatingToolbarProps {
   onTextColorChange: (color: string) => void;
   selectedKeysCount: number;
   editingKey: any;
-  onLegendSettingsChange: (keyId: string, settings: any) => void;
-  onLegendChange: (keyId: string, legend: string) => void;
+  selectedLayer: KeycapLayer | null;
+  onLayerUpdate: (keyId: string, layerId: string, updates: Partial<KeycapLayer>) => void;
+  onLegendChange: (keyId: string, layerId: string, content: string) => void;
 }
 
 const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
@@ -46,7 +48,8 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
   onTextColorChange,
   selectedKeysCount,
   editingKey,
-  onLegendSettingsChange,
+  selectedLayer,
+  onLayerUpdate,
   onLegendChange,
 }) => {
   const [showColorPicker, setShowColorPicker] = useState(false);
@@ -104,24 +107,24 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
 
   // Debounced update to parent component
   useEffect(() => {
-    if (editingKey && onLegendSettingsChange) {
+    if (editingKey && selectedLayer && onLayerUpdate) {
       const timeoutId = setTimeout(() => {
-        const settings: any = {
-          legendOffsetX: localPositionX[0],
-          legendOffsetY: localPositionY[0],
-          legendRotation: localRotation[0],
+        const updates: Partial<KeycapLayer> = {
+          offsetX: localPositionX[0],
+          offsetY: localPositionY[0],
+          rotation: localRotation[0],
         };
         
-        // Only include font size if the key already has a font size set or if it's been manually changed
-        if (editingKey.legendFontSize !== undefined || localFontSize[0] !== 14) {
-          settings.legendFontSize = localFontSize[0];
+        // Only include font size if the layer already has a font size set or if it's been manually changed
+        if (selectedLayer.fontSize !== undefined || localFontSize[0] !== 14) {
+          updates.fontSize = localFontSize[0];
         }
         
-        onLegendSettingsChange(editingKey.id, settings);
+        onLayerUpdate(editingKey.id, selectedLayer.id, updates);
       }, 10); // Small delay to prevent excessive updates
       return () => clearTimeout(timeoutId);
     }
-  }, [localPositionX, localPositionY, localRotation, localFontSize, editingKey]);
+  }, [localPositionX, localPositionY, localRotation, localFontSize, editingKey, selectedLayer, onLayerUpdate]);
 
   const startEyedropper = useCallback(async () => {
     if ('EyeDropper' in window) {
@@ -136,28 +139,28 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
   }, [onColorChange]);
 
   const handleAlignmentChange = useCallback((alignment: 'left' | 'center' | 'right') => {
-    if (editingKey && onLegendSettingsChange) {
-      onLegendSettingsChange(editingKey.id, { legendAlignment: alignment });
+    if (editingKey && selectedLayer && onLayerUpdate) {
+      onLayerUpdate(editingKey.id, selectedLayer.id, { alignment });
     }
-  }, [editingKey, onLegendSettingsChange]);
+  }, [editingKey, selectedLayer, onLayerUpdate]);
 
   const handleVerticalAlignmentChange = useCallback((alignment: 'top' | 'center' | 'bottom') => {
-    if (editingKey && onLegendSettingsChange) {
-      onLegendSettingsChange(editingKey.id, { legendVerticalAlignment: alignment });
+    if (editingKey && selectedLayer && onLayerUpdate) {
+      onLayerUpdate(editingKey.id, selectedLayer.id, { verticalAlignment: alignment });
     }
-  }, [editingKey, onLegendSettingsChange]);
+  }, [editingKey, selectedLayer, onLayerUpdate]);
 
   const handleMirrorChange = useCallback((axis: 'X' | 'Y', value: boolean) => {
-    if (editingKey && onLegendSettingsChange) {
-      onLegendSettingsChange(editingKey.id, { [`legendMirror${axis}`]: value });
+    if (editingKey && selectedLayer && onLayerUpdate) {
+      onLayerUpdate(editingKey.id, selectedLayer.id, { [`mirror${axis}`]: value });
     }
-  }, [editingKey, onLegendSettingsChange]);
+  }, [editingKey, selectedLayer, onLayerUpdate]);
 
   const handleFontChange = useCallback((font: string) => {
-    if (editingKey && onLegendSettingsChange) {
-      onLegendSettingsChange(editingKey.id, { legendFont: font });
+    if (editingKey && selectedLayer && onLayerUpdate) {
+      onLayerUpdate(editingKey.id, selectedLayer.id, { font });
     }
-  }, [editingKey, onLegendSettingsChange]);
+  }, [editingKey, selectedLayer, onLayerUpdate]);
 
   const handlePositionXChange = useCallback((value: number[]) => {
     setLocalPositionX(value);
@@ -176,28 +179,29 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
   }, []);
 
   const handleTextStyleChange = useCallback((style: 'bold' | 'italic' | 'underline') => {
-    if (editingKey && onLegendSettingsChange) {
-      const currentStyle = editingKey[`legend${style.charAt(0).toUpperCase() + style.slice(1)}`] || false;
-      onLegendSettingsChange(editingKey.id, { 
-        [`legend${style.charAt(0).toUpperCase() + style.slice(1)}`]: !currentStyle 
+    if (editingKey && selectedLayer && onLayerUpdate) {
+      const currentStyle = selectedLayer[style] || false;
+      onLayerUpdate(editingKey.id, selectedLayer.id, { 
+        [style]: !currentStyle 
       });
     }
-  }, [editingKey, onLegendSettingsChange]);
+  }, [editingKey, selectedLayer, onLayerUpdate]);
 
   const handleImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && editingKey && onLegendSettingsChange) {
+    if (file && editingKey && selectedLayer && onLayerUpdate) {
       const reader = new FileReader();
       reader.onload = (event) => {
         if (event.target?.result) {
-          onLegendSettingsChange(editingKey.id, { 
-            legendImage: event.target.result as string 
+          onLayerUpdate(editingKey.id, selectedLayer.id, { 
+            content: event.target.result as string,
+            type: 'image'
           });
         }
       };
       reader.readAsDataURL(file);
     }
-  }, [editingKey, onLegendSettingsChange]);
+  }, [editingKey, selectedLayer, onLayerUpdate]);
 
   // Show toolbar even when no key is selected (for layout changes, etc.)
   // if (!editingKey) return null;
@@ -306,7 +310,7 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
               {(['left', 'center', 'right'] as const).map((align) => (
                 <Button
                   key={align}
-                  variant={editingKey?.legendAlignment === align ? "default" : "outline"}
+                  variant={selectedLayer?.alignment === align ? "default" : "outline"}
                   size="sm"
                   onClick={() => handleAlignmentChange(align)}
                   className="h-5 w-5 sm:h-6 sm:w-6 p-0 border-border hover:bg-muted"
@@ -321,7 +325,7 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
               {(['top', 'center', 'bottom'] as const).map((align) => (
                 <Button
                   key={align}
-                  variant={editingKey?.legendVerticalAlignment === align ? "default" : "outline"}
+                  variant={selectedLayer?.verticalAlignment === align ? "default" : "outline"}
                   size="sm"
                   onClick={() => handleVerticalAlignmentChange(align)}
                   className="h-5 w-5 sm:h-6 sm:w-6 p-0 border-border hover:bg-muted"
@@ -336,23 +340,23 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => handleRotationChange([(editingKey?.legendRotation || 0) + 90])}
+                onClick={() => handleRotationChange([(selectedLayer?.rotation || 0) + 90])}
                 className="h-5 w-5 sm:h-6 sm:w-6 p-0 border-border hover:bg-muted"
               >
                 <RotateCw className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-foreground" />
               </Button>
               <Button
-                variant={editingKey?.legendMirrorX ? "default" : "outline"}
+                variant={selectedLayer?.mirrorX ? "default" : "outline"}
                 size="sm"
-                onClick={() => handleMirrorChange('X', !editingKey?.legendMirrorX)}
+                onClick={() => handleMirrorChange('X', !selectedLayer?.mirrorX)}
                 className="h-5 w-5 sm:h-6 sm:w-6 p-0 border-border hover:bg-muted"
               >
                 <FlipHorizontal className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-foreground" />
               </Button>
               <Button
-                variant={editingKey?.legendMirrorY ? "default" : "outline"}
+                variant={selectedLayer?.mirrorY ? "default" : "outline"}
                 size="sm"
-                onClick={() => handleMirrorChange('Y', !editingKey?.legendMirrorY)}
+                onClick={() => handleMirrorChange('Y', !selectedLayer?.mirrorY)}
                 className="h-5 w-5 sm:h-6 sm:w-6 p-0 border-border hover:bg-muted"
               >
                 <FlipVertical className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-foreground" />
@@ -457,7 +461,7 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
               {/* Main Controls Row */}
               <div className="flex gap-0.5 items-center flex-wrap sm:flex-nowrap">
                 {/* Font Selection */}
-                <Select value={editingKey?.legendFont || 'Arial'} onValueChange={handleFontChange}>
+                <Select value={selectedLayer?.font || 'Arial'} onValueChange={handleFontChange}>
                   <SelectTrigger className="w-24 sm:w-28 h-6 text-xs border-border bg-background text-foreground">
                     <SelectValue />
                   </SelectTrigger>
@@ -472,7 +476,7 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
                 
                 {/* Text Style Buttons */}
                 <Button
-                  variant={editingKey?.legendBold ? "default" : "outline"}
+                  variant={selectedLayer?.bold ? "default" : "outline"}
                   size="sm"
                   onClick={() => handleTextStyleChange('bold')}
                   className="h-5 w-5 sm:h-6 sm:w-6 p-0 text-xs font-bold border-border hover:bg-muted"
@@ -480,7 +484,7 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
                   B
                 </Button>
                 <Button
-                  variant={editingKey?.legendItalic ? "default" : "outline"}
+                  variant={selectedLayer?.italic ? "default" : "outline"}
                   size="sm"
                   onClick={() => handleTextStyleChange('italic')}
                   className="h-5 w-5 sm:h-6 sm:w-6 p-0 text-xs italic border-border hover:bg-muted"
@@ -488,7 +492,7 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
                   I
                 </Button>
                 <Button
-                  variant={editingKey?.legendUnderline ? "default" : "outline"}
+                  variant={selectedLayer?.underline ? "default" : "outline"}
                   size="sm"
                   onClick={() => handleTextStyleChange('underline')}
                   className="h-5 w-5 sm:h-6 sm:w-6 p-0 text-xs underline border-border hover:bg-muted"
@@ -512,11 +516,11 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
                 
                 {/* Text Mode Button */}
                 <Button
-                  variant={editingKey?.legendMode !== 'image' ? "default" : "outline"}
+                  variant={selectedLayer?.type !== 'image' ? "default" : "outline"}
                   size="sm"
                   onClick={() => {
-                    if (editingKey && onLegendSettingsChange) {
-                      onLegendSettingsChange(editingKey.id, { legendMode: 'text' });
+                    if (editingKey && selectedLayer && onLayerUpdate) {
+                      onLayerUpdate(editingKey.id, selectedLayer.id, { type: 'text' });
                     }
                     setShowTextInput(!showTextInput);
                     setShowImageUpload(false);
@@ -529,12 +533,10 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
                 
                 {/* Image Mode Button */}
                 <Button
-                  variant={editingKey?.legendMode === 'image' ? "default" : "outline"}
+                  variant={showImageUpload ? "default" : "outline"}
                   size="sm"
                   onClick={() => {
-                    if (editingKey && onLegendSettingsChange) {
-                      onLegendSettingsChange(editingKey.id, { legendMode: 'image' });
-                    }
+                    // Don't change layer type immediately - only when image is uploaded
                     setShowImageUpload(!showImageUpload);
                     setShowTextInput(false);
                     setShowSizeSlider(false);
@@ -551,8 +553,8 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
                   <div className="space-y-1">
                     <Label className="text-xs font-medium text-foreground">Text Input</Label>
                     <Input
-                      value={editingKey?.legend || ''}
-                      onChange={(e) => editingKey && onLegendChange(editingKey.id, e.target.value)}
+                      value={selectedLayer?.content || ''}
+                      onChange={(e) => editingKey && selectedLayer && onLegendChange(editingKey.id, selectedLayer.id, e.target.value)}
                       placeholder="Enter key text..."
                       className="h-6 text-xs border-border bg-background text-foreground"
                       autoFocus
@@ -576,9 +578,9 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
                     <Label htmlFor="image-upload" className="cursor-pointer flex items-center gap-1 h-6 px-2 border border-border rounded-md bg-background hover:bg-muted text-xs text-foreground">
                       <Upload className="h-3 w-3" /> Upload Image
                     </Label>
-                    {editingKey?.legendImage && (
+                    {selectedLayer?.content && selectedLayer?.type === 'image' && selectedLayer.content.trim() !== '' && (
                       <div className="mt-1">
-                        <img src={editingKey.legendImage} alt="Preview" className="w-12 h-12 object-contain border border-border rounded" />
+                        <img src={selectedLayer.content} alt="Preview" className="w-12 h-12 object-contain border border-border rounded" />
                       </div>
                     )}
                   </div>

@@ -28,15 +28,19 @@ src/
 │   ├── FloatingToolbar.tsx # Compact floating toolbar (Canva-style)
 │   ├── GroupManager.tsx # Key group management
 │   ├── Keyboard3D.tsx   # 3D keyboard preview
-│   ├── KeyboardPreview.tsx # 2D keyboard preview
+│   ├── KeyboardPreview.tsx # 2D keyboard preview with layer preview
 │   ├── KeycapPreview.tsx # Individual keycap component
+│   ├── KeyLayerPreview.tsx # Compact layer preview above selected key
+│   ├── LayerEditor.tsx  # Individual layer editing interface
+│   ├── LayerManager.tsx # Multi-layer management interface
 │   ├── LayoutSelector.tsx # Keyboard layout selection (legacy)
 │   ├── CompactLayoutSelector.tsx # Compact layout dropdown
-│   └── UnifiedSidebar.tsx # Merged sidebar with layout, groups, and export
+│   └── UnifiedSidebar.tsx # Merged sidebar with layout, groups, and layers
 ├── data/
 │   └── layouts.ts       # Keyboard layout definitions
 ├── hooks/
 │   ├── useKeyboardConfig.ts # Main state management hook
+│   ├── useLayerManagement.ts # Layer management functionality
 │   ├── use-mobile.tsx   # Mobile detection hook
 │   └── use-toast.ts     # Toast notifications
 ├── lib/
@@ -53,6 +57,28 @@ src/
 
 ## Core Types
 
+### KeycapLayer
+```typescript
+interface KeycapLayer {
+  id: string;
+  type: 'text' | 'image';
+  content: string; // text content or image data URL
+  font?: string;
+  fontSize?: number;
+  color?: string;
+  offsetX?: number;
+  offsetY?: number;
+  alignment?: 'left' | 'center' | 'right';
+  verticalAlignment?: 'top' | 'center' | 'bottom';
+  rotation?: number;
+  mirrorX?: boolean;
+  mirrorY?: boolean;
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+}
+```
+
 ### KeycapConfig
 ```typescript
 interface KeycapConfig {
@@ -63,25 +89,10 @@ interface KeycapConfig {
   height: number;
   x: number;
   y: number;
-  legend: string;
   color: string;
   textColor: string;
   group?: string;
-  // Enhanced legend settings
-  legendMode?: 'text' | 'image';
-  legendImage?: string | null;
-  legendFont?: string;
-  legendFontSize?: number;
-  legendOffsetX?: number;
-  legendOffsetY?: number;
-  legendAlignment?: 'left' | 'center' | 'right';
-  legendVerticalAlignment?: 'top' | 'center' | 'bottom';
-  legendRotation?: number;
-  legendMirrorX?: boolean;
-  legendMirrorY?: boolean;
-  legendBold?: boolean; // bold text
-  legendItalic?: boolean; // italic text
-  legendUnderline?: boolean; // underlined text
+  layers: KeycapLayer[]; // Multi-layer support
 }
 ```
 
@@ -125,8 +136,6 @@ interface KeyboardConfig {
 - `clearSelection()`: Clear all selected keys
 - `updateKeycapColor(keyIds: string[], color: string)`: Update keycap colors
 - `updateKeycapTextColor(keyIds: string[], textColor: string)`: Update legend colors
-- `updateKeycapLegend(keyId: string, legend: string)`: Update key legend text
-- `updateKeycapLegendSettings(keyId: string, settings: Partial<KeycapConfig>)`: Update advanced legend settings
 - `startEditingKey(keyId: string)`: Start editing a key's legend
 - `stopEditingKey()`: Stop editing current key
 - `getSelectedKey()`: Get currently editing key
@@ -134,6 +143,12 @@ interface KeyboardConfig {
 - `saveGroup(groupName: string, keyIds: string[])`: Save key selection as group
 - `loadGroup(groupName: string)`: Load saved key group
 - `deleteGroup(groupName: string)`: Delete saved group
+- `addLayer(keyId: string, type: 'text' | 'image')`: Add new layer to keycap
+- `deleteLayer(keyId: string, layerId: string)`: Delete layer from keycap
+- `reorderLayer(keyId: string, layerId: string, direction: 'up' | 'down')`: Reorder layers
+- `updateLayer(keyId: string, layerId: string, updates: Partial<KeycapLayer>)`: Update layer properties
+- `getKeyLayers(keyId: string)`: Get all layers for a key
+- `selectLayer(layerId: string | null)`: Select specific layer for editing
 
 ## Available Layouts
 
@@ -150,10 +165,11 @@ interface KeyboardConfig {
 ## Key Components
 
 ### KeyboardPreview
-- **Purpose**: 2D keyboard visualization with full-width scaling
-- **Props**: layout, selectedKeys, onKeySelect, onKeyDoubleClick
-- **Features**: Click selection, double-click editing, visual feedback, flexible container sizing
+- **Purpose**: 2D keyboard visualization with full-width scaling and layer preview
+- **Props**: layout, selectedKeys, onKeySelect, onKeyDoubleClick, editingKeyId, currentKeyLayers, selectedLayerId, onLayerSelect
+- **Features**: Click selection, double-click editing, visual feedback, flexible container sizing, compact layer preview
 - **Layout**: Flexbox-based container with centered keyboard preview and minimum width constraints
+- **Layer Preview**: Shows compact layer buttons above selected key with theme-consistent styling
 
 ### Keyboard3D
 - **Purpose**: 3D keyboard visualization using Three.js
@@ -161,9 +177,10 @@ interface KeyboardConfig {
 - **Features**: Orbit controls, lighting, shadows, animations
 
 ### KeycapPreview
-- **Purpose**: Individual keycap rendering
+- **Purpose**: Individual keycap rendering with multi-layer support
 - **Props**: keycap, selected, onClick, onDoubleClick, scale
-- **Features**: Legend positioning, font customization, image support
+- **Features**: Multi-layer rendering, legend positioning, font customization, image support
+- **Layer Rendering**: Renders all layers with proper positioning, alignment, and styling
 
 ### EnhancedColorPicker
 - **Purpose**: Advanced color selection
@@ -195,8 +212,9 @@ interface KeyboardConfig {
   - **Key References**: Uses `keyRefs` to access actual DOM elements for precise positioning
 
 ### FloatingToolbar
-- **Purpose**: Compact, centered toolbar positioned between view toggle and keyboard preview
+- **Purpose**: Compact, centered toolbar for layer editing with multi-layer support
 - **Features**:
+  - **Layer-Based Editing**: Works with selected layer instead of key properties
   - **Always Visible**: Remains visible regardless of key selection state
   - **Content-Based Width**: Uses `w-fit` to size toolbar based on content, not full width
   - **Centered Layout**: Horizontally centered with `mx-auto` for optimal positioning
@@ -208,18 +226,20 @@ interface KeyboardConfig {
   - **Responsive Sizing**: Smaller buttons and icons on mobile (`h-5 w-5`), larger on desktop (`sm:h-6 sm:w-6`)
   - **Minimal Separators**: Reduced height separators (`h-4`) for tighter layout
   - **Theme Integration**: Matches dark tech aesthetic with proper color tokens
-  - **Safe Guards**: All handlers check for key selection before executing
+  - **Layer Integration**: Updates layer properties instead of key properties
+  - **Safe Guards**: All handlers check for key and layer selection before executing
 
 ### UnifiedSidebar
-- **Purpose**: Merged sidebar containing layout selection, group management, and export functionality
+- **Purpose**: Merged sidebar containing layout selection, group management, and layer management
 - **Features**:
-  - **Single Container**: Combines CompactLayoutSelector, GroupManager, and ExportPanel
-  - **Section Organization**: Clear headings for Layout, Groups, and Export sections
+  - **Single Container**: Combines CompactLayoutSelector, GroupManager, and LayerManager
+  - **Section Organization**: Clear headings for Layout, Groups, and Components & Layers sections
   - **Visual Separators**: Consistent dividers between sections
   - **Full-Height Design**: Sticks to header/footer with internal scroll
   - **No Gaps**: Seamlessly connected to page edges
   - **Theme Integration**: Matches dark tech aesthetic with proper color tokens
   - **Responsive Width**: Fixed width (320px/384px) with scroll overflow
+  - **Layer Management**: Integrated layer management with add/delete/reorder functionality
 
 ### CompactLayoutSelector
 - **Purpose**: Compact layout selection dropdown (now integrated in UnifiedSidebar)
@@ -234,9 +254,40 @@ interface KeyboardConfig {
 - **Purpose**: Save/load key groups
 - **Features**: Create groups, load selections, delete groups
 
+### KeyLayerPreview
+- **Purpose**: Compact layer preview above selected key
+- **Props**: layers, selectedLayerId, onLayerSelect, keyPosition, unit, padding
+- **Features**: 
+  - **Compact Design**: Only shows layer content without descriptive text
+  - **Theme Integration**: Matches dark tech aesthetic with card/primary colors
+  - **Interactive Selection**: Click to select different layers
+  - **Positioned Above Key**: Appears 60px above selected key to avoid blocking
+  - **Opacity & Blur**: Semi-transparent with backdrop blur for modern glass effect
+  - **Circular Buttons**: Each layer as circular button with proper hover states
+
+### LayerManager
+- **Purpose**: Multi-layer management interface
+- **Features**:
+  - **Layer List**: Shows all layers for selected key
+  - **Add Layers**: Create new text or image layers
+  - **Layer Operations**: Delete, reorder layers
+  - **Layer Selection**: Click to select specific layer for editing
+  - **Visual Indicators**: Shows layer type and content preview
+
+### LayerEditor
+- **Purpose**: Individual layer editing interface
+- **Features**:
+  - **Text/Image Mode**: Toggle between text and image content
+  - **Font Controls**: Font selection and size adjustment
+  - **Positioning**: X/Y offset controls with sliders
+  - **Alignment**: Horizontal and vertical alignment options
+  - **Transform**: Rotation and mirror effects
+  - **Real-time Preview**: Live updates during editing
+
 ### ExportPanel
-- **Purpose**: Export configurations
+- **Purpose**: Export configurations (now in header dropdown)
 - **Features**: JSON export, summary export, download functionality
+- **Location**: Moved from sidebar to header popover for better accessibility
 
 ## Routing
 
@@ -292,8 +343,17 @@ interface KeyboardConfig {
 - Eyedropper tool
 - Real-time preview
 
-### 4. Legend Editing
-- Text and image legends
+### 4. Multi-Layer System
+- **Layer Management**: Add multiple text and image layers to each keycap
+- **Layer Preview**: Compact visual preview above selected key
+- **Layer Selection**: Click to select specific layer for editing
+- **Layer Operations**: Add, delete, and reorder layers
+- **Individual Layer Editing**: Each layer has its own properties and settings
+- **Real-time Preview**: Live updates during layer editing
+- **FloatingToolbar Integration**: All editing tools work with selected layer
+
+### 5. Legend Editing
+- Text and image legends per layer
 - Font selection and sizing
 - Position and alignment controls
 - Rotation and mirror effects
@@ -301,18 +361,19 @@ interface KeyboardConfig {
 - Real-time preview
 - Compact floating toolbar interface
 
-### 5. Group Management
+### 6. Group Management
 - Save key selections as groups
 - Load saved groups
 - Delete groups
 - Visual group indicators
 
-### 6. Export Functionality
+### 7. Export Functionality
 - JSON configuration export
 - Summary text export
 - Download with timestamps
+- Header-based export dropdown
 
-### 7. 3D Visualization
+### 8. 3D Visualization
 - Three.js powered 3D preview
 - Orbit controls
 - Lighting and shadows
@@ -540,11 +601,73 @@ import { KeyboardLayout } from '@/types/keyboard'
 
 *This reference document should be updated as the project evolves. Last updated: January 2025*
 
-## Recent Updates - UnifiedSidebar (January 2025)
+## Recent Updates - Multi-Layer System & UI Improvements (January 2025)
+
+### Multi-Layer Keycap System
+- **Layer Architecture**: Implemented KeycapLayer interface for individual layer management
+- **Layer Management**: Added useLayerManagement hook for layer operations (add, delete, reorder, update)
+- **Layer Preview**: Created KeyLayerPreview component with compact design above selected key
+- **Layer Integration**: Updated FloatingToolbar to work with selected layers instead of key properties
+- **Visual Design**: Theme-consistent layer preview with opacity, backdrop blur, and circular buttons
+
+### FloatingToolbar Enhancement
+- **Layer-Based Editing**: Modified to work with selected layer properties instead of key properties
+- **Multi-Layer Support**: All editing functions now operate on the currently selected layer
+- **Improved Integration**: Seamless integration with layer selection and management
+- **Consistent Styling**: Maintains theme consistency while supporting layer-specific editing
+
+### UI/UX Improvements
+- **Export Relocation**: Moved ExportPanel from sidebar to header dropdown for better accessibility
+- **Sidebar Consolidation**: Integrated LayerManager into UnifiedSidebar below GroupManager
+- **Compact Layer Preview**: Removed verbose text labels, showing only layer content
+- **Positioning Fix**: Layer preview positioned above keycap to avoid blocking
+- **Theme Integration**: All new components match dark tech aesthetic with proper color tokens
+
+### Component Updates
+- **KeyboardPreview**: Added layer preview functionality with proper positioning
+- **UnifiedSidebar**: Now includes layer management section with full functionality
+- **KeycapPreview**: Updated to render multiple layers with proper positioning and styling
+- **Index.tsx**: Updated to pass layer management props and handle layer operations
 
 ### Layout Consolidation
-- **Merged Components**: Combined CompactLayoutSelector, GroupManager, and ExportPanel into single UnifiedSidebar
+- **Merged Components**: Combined CompactLayoutSelector, GroupManager, and LayerManager into single UnifiedSidebar
 - **Eliminated Gaps**: Removed all padding and gaps around sidebar for seamless edge connection
 - **Full-Height Design**: Sidebar now extends from header to footer with internal scrolling
 - **Improved Organization**: Clear section divisions with consistent typography and separators
 - **Enhanced UX**: Single cohesive container instead of multiple separate components
+
+## Latest Updates - Image Upload & Layer Preview Fixes (January 2025)
+
+### Image Upload System Improvements
+- **Fixed Layer Type Change**: Image button no longer immediately changes layer type to 'image' when clicked
+- **Preserved Layer Content**: Layer content and display remain unchanged until actual image is uploaded
+- **Improved Button State**: Image button shows active state based on upload panel visibility, not layer type
+- **Eliminated Broken Previews**: No more broken image placeholders when clicking image icon
+- **Better UX Flow**: Users can click image icon to open upload panel without affecting current layer content
+
+### Layer Preview Enhancements
+- **Auto-Layer Selection**: Layer preview now appears immediately when clicking on a keycap
+- **First Layer Auto-Select**: Automatically selects the first layer when a key with layers is clicked
+- **Improved Visibility**: Layer preview appears above selected keycap without blocking the key
+- **Click-Outside Functionality**: Layer preview closes when clicking outside of it
+- **Compact Design**: Clean, minimal design showing only layer content without verbose labels
+
+### Content Management Fixes
+- **Empty Content Handling**: Fixed layer creation to use `undefined` instead of empty string for image layers
+- **Proper Image Rendering**: Images only render when actual content exists and is not empty
+- **Consistent State Management**: All components now properly handle empty/undefined content states
+- **No Placeholder Artifacts**: Eliminated unwanted placeholder images on keycaps
+
+### Component Architecture Updates
+- **useLayerManagement**: Updated to create image layers with `undefined` content instead of empty string
+- **KeycapPreview**: Enhanced image rendering conditions to check for valid, non-empty content
+- **FloatingToolbar**: Improved image upload flow and button state management
+- **KeyLayerPreview**: Updated to handle empty image content properly
+- **Index.tsx**: Added auto-layer selection logic for better user experience
+
+### User Experience Improvements
+- **Intuitive Layer Selection**: Clicking a keycap immediately shows layer preview and selects first layer
+- **Clean Image Upload**: Image upload panel opens without affecting current layer state
+- **Visual Consistency**: All image-related UI elements work harmoniously together
+- **Reduced Confusion**: No more unexpected layer type changes or broken displays
+- **Smooth Workflow**: Seamless transition from text to image layers when needed

@@ -1,10 +1,10 @@
 import React from 'react';
 import CompactLayoutSelector from '@/components/CompactLayoutSelector';
 import GroupManager from '@/components/GroupManager';
-import ExportPanel from '@/components/ExportPanel';
+import LayerManager from '@/components/LayerManager';
 import { Separator } from '@/components/ui/separator';
 import { Card } from '@/components/ui/card';
-import { KeyboardLayout, LayoutType } from '@/types/keyboard';
+import { LayoutType, KeycapLayer } from '@/types/keyboard';
 
 interface UnifiedSidebarProps {
   // Layout selector props
@@ -24,18 +24,15 @@ interface UnifiedSidebarProps {
   onLoadGroup: (groupName: string) => void;
   onDeleteGroup: (groupName: string) => void;
 
-  // Export panel props
-  config: {
-    layout: KeyboardLayout;
-    globalSettings: {
-      theme: string;
-      font: string;
-    };
-    selectedKeys: string[];
-    groups: Record<string, string[]>;
-    allLayouts: Record<LayoutType, KeyboardLayout>;
-    currentLayoutType: LayoutType;
-  };
+  // Layer management props
+  editingKeyId?: string | null;
+  currentKeyLayers?: KeycapLayer[];
+  selectedLayerId?: string | null;
+  onLayerSelect?: (layerId: string) => void;
+  onLayerReorder?: (layerId: string, direction: 'up' | 'down') => void;
+  onLayerDelete?: (layerId: string) => void;
+  onAddTextLayer?: () => void;
+  onAddImageLayer?: () => void;
 }
 
 const UnifiedSidebar: React.FC<UnifiedSidebarProps> = ({
@@ -47,7 +44,14 @@ const UnifiedSidebar: React.FC<UnifiedSidebarProps> = ({
   onSaveGroup,
   onLoadGroup,
   onDeleteGroup,
-  config,
+  editingKeyId,
+  currentKeyLayers = [],
+  selectedLayerId,
+  onLayerSelect,
+  onLayerReorder,
+  onLayerDelete,
+  onAddTextLayer,
+  onAddImageLayer,
 }) => {
   return (
     <Card className="w-full h-full bg-card/80 backdrop-blur-sm border-border/50 border-r border-b-0 border-l-0 border-t-0 rounded-none">
@@ -76,10 +80,19 @@ const UnifiedSidebar: React.FC<UnifiedSidebarProps> = ({
 
         <Separator className="bg-border/60" />
 
-        {/* Export Section */}
+        {/* Layer Management Section */}
         <div className="space-y-3">
-          <ExportPanel config={config} />
+          <LayerManager
+            layers={currentKeyLayers}
+            selectedLayerId={selectedLayerId}
+            onLayerSelect={onLayerSelect}
+            onLayerReorder={onLayerReorder}
+            onLayerDelete={onLayerDelete}
+            onAddTextLayer={onAddTextLayer}
+            onAddImageLayer={onAddImageLayer}
+          />
         </div>
+
       </div>
     </Card>
   );

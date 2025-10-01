@@ -48,7 +48,7 @@ const KeycapPreview = forwardRef<HTMLDivElement, KeycapPreviewProps>(({
       pointerEvents: 'none',
     };
 
-    if (layer.type === 'image' && layer.content) {
+    if (layer.type === 'image' && layer.content && layer.content.trim() !== '') {
       return (
         <div key={layer.id} style={containerStyle}>
           <img

@@ -7,9 +7,10 @@ import Keyboard3D from '@/components/Keyboard3D';
 import DragSelection from '@/components/DragSelection';
 import FloatingToolbar from '@/components/FloatingToolbar';
 import LayerManager from '@/components/LayerManager';
-import LayerEditor from '@/components/LayerEditor';
-import { Box, Monitor, ShoppingCart, User } from 'lucide-react';
+import ExportPanel from '@/components/ExportPanel';
+import { Box, Monitor, ShoppingCart, User, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 const Index = () => {
   const [view3D, setView3D] = useState(false);
@@ -54,6 +55,14 @@ const Index = () => {
       // Single click - select and start editing
       selectKey(keyId, false);
       startEditingKey(keyId);
+      
+      // Auto-select the first layer if the key has layers
+      const keyLayers = getKeyLayers(keyId);
+      if (keyLayers.length > 0) {
+        selectLayer(keyLayers[0].id);
+      } else {
+        selectLayer(null);
+      }
     }
   };
 
@@ -63,6 +72,14 @@ const Index = () => {
 
   const handleKeyDoubleClick = (keyId: string) => {
     startEditingKey(keyId);
+  };
+
+  const handleLayerSelect = (layerId: string) => {
+    if (layerId === '') {
+      selectLayer(null); // Clear layer selection
+    } else {
+      selectLayer(layerId);
+    }
   };
 
   const handleColorChange = (color: string) => {
@@ -106,8 +123,24 @@ const Index = () => {
               />
             </div>
             
-            {/* Right side - View toggle, Cart and Profile icons */}
+            {/* Right side - Export, View toggle, Cart and Profile icons */}
             <div className="flex items-center gap-4">
+              {/* Export Button */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-10 w-10 text-muted-foreground hover:text-foreground hover:bg-muted"
+                    title="Export Configuration"
+                  >
+                    <Download className="h-5 w-5" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 p-4" align="end">
+                  <ExportPanel config={config} />
+                </PopoverContent>
+              </Popover>
               <Button
                 variant="ghost"
                 size="icon"
@@ -150,35 +183,19 @@ const Index = () => {
             onSaveGroup={saveGroup}
             onLoadGroup={loadGroup}
             onDeleteGroup={deleteGroup}
-            config={config}
+            editingKeyId={editingKeyId}
+            currentKeyLayers={currentKeyLayers}
+            selectedLayerId={selectedLayerId}
+            onLayerSelect={selectLayer}
+            onLayerReorder={(layerId, direction) => editingKeyId && reorderLayer(editingKeyId, layerId, direction)}
+            onLayerDelete={(layerId) => editingKeyId && deleteLayer(editingKeyId, layerId)}
+            onAddTextLayer={() => {
+              editingKeyId && addLayer(editingKeyId, 'text');
+            }}
+            onAddImageLayer={() => {
+              editingKeyId && addLayer(editingKeyId, 'image');
+            }}
           />
-          
-          {/* Layer Management - Show when a single key is selected */}
-          {editingKeyId && config.selectedKeys.length === 1 && (
-            <div className="p-4 space-y-4">
-              <LayerManager
-                layers={currentKeyLayers}
-                selectedLayerId={selectedLayerId}
-                onLayerSelect={selectLayer}
-                onLayerReorder={(layerId, direction) => reorderLayer(editingKeyId, layerId, direction)}
-                onLayerDelete={(layerId) => deleteLayer(editingKeyId, layerId)}
-                onAddTextLayer={() => {
-                  addLayer(editingKeyId, 'text');
-                }}
-                onAddImageLayer={() => {
-                  addLayer(editingKeyId, 'image');
-                }}
-              />
-              
-              {selectedLayer && (
-                <LayerEditor
-                  layer={selectedLayer}
-                  onLayerChange={(updates) => updateLayer(editingKeyId, selectedLayer.id, updates)}
-                  onClose={() => selectLayer(null)}
-                />
-              )}
-            </div>
-          )}
         </div>
 
         {/* Right Panel - Preview */}
@@ -193,8 +210,11 @@ const Index = () => {
                 onTextColorChange={handleTextColorChange}
                 selectedKeysCount={config.selectedKeys.length}
                 editingKey={editingKey}
-                onLegendSettingsChange={() => {}}
-                onLegendChange={() => {}}
+                selectedLayer={selectedLayer}
+                onLayerUpdate={updateLayer}
+                onLegendChange={(keyId, layerId, content) => {
+                  updateLayer(keyId, layerId, { content });
+                }}
               />
               
               {/* Preview Area */}
@@ -216,51 +236,14 @@ const Index = () => {
                     selectedKeys={config.selectedKeys}
                     onKeySelect={handleKeySelect}
                     onKeyDoubleClick={handleKeyDoubleClick}
+                    editingKeyId={editingKeyId}
+                    currentKeyLayers={currentKeyLayers}
+                    selectedLayerId={selectedLayerId}
+                    onLayerSelect={handleLayerSelect}
                   />
                 </DragSelection>
               )}
               
-              {/* Visual Layer Preview - Shows on top of selected key */}
-              {editingKeyId && config.selectedKeys.length === 1 && currentKeyLayers.length > 0 && (
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-                  <div className="bg-background/95 backdrop-blur border-2 border-primary rounded-lg shadow-2xl p-4 pointer-events-auto">
-                    <div className="flex items-center justify-between mb-3 pb-2 border-b">
-                      <h4 className="text-sm font-semibold">Key Layers Preview</h4>
-                      <span className="text-xs text-muted-foreground">{currentKeyLayers.length} layer{currentKeyLayers.length !== 1 ? 's' : ''}</span>
-                    </div>
-                    <div className="space-y-2 max-h-64 overflow-y-auto">
-                      {currentKeyLayers.map((layer, index) => (
-                        <div
-                          key={layer.id}
-                          className={`flex items-center gap-2 p-2 rounded border ${
-                            selectedLayerId === layer.id
-                              ? 'border-primary bg-primary/10'
-                              : 'border-border bg-card'
-                          } cursor-pointer hover:bg-accent/50 transition-colors`}
-                          onClick={() => selectLayer(layer.id)}
-                        >
-                          <div className="text-xs text-muted-foreground w-6">#{index + 1}</div>
-                          <div className="flex-1">
-                            {layer.type === 'image' && layer.content ? (
-                              <img src={layer.content} alt="layer" className="h-8 w-auto max-w-[60px] object-contain" />
-                            ) : (
-                              <div className="text-sm truncate" style={{
-                                fontFamily: layer.font,
-                                fontSize: `${Math.min(layer.fontSize || 14, 16)}px`
-                              }}>
-                                {layer.content || 'Empty'}
-                              </div>
-                            )}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {layer.type === 'image' ? '🖼️' : '📝'}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>
