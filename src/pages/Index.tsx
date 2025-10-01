@@ -182,7 +182,7 @@ const Index = () => {
         </div>
 
         {/* Right Panel - Preview */}
-        <div className="flex-1 min-w-0 px-4 py-6">
+        <div className="flex-1 min-w-0 px-4 py-6 relative">
             <div className="space-y-4 h-full">
 
               {/* Floating Toolbar */}
@@ -218,6 +218,48 @@ const Index = () => {
                     onKeyDoubleClick={handleKeyDoubleClick}
                   />
                 </DragSelection>
+              )}
+              
+              {/* Visual Layer Preview - Shows on top of selected key */}
+              {editingKeyId && config.selectedKeys.length === 1 && currentKeyLayers.length > 0 && (
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+                  <div className="bg-background/95 backdrop-blur border-2 border-primary rounded-lg shadow-2xl p-4 pointer-events-auto">
+                    <div className="flex items-center justify-between mb-3 pb-2 border-b">
+                      <h4 className="text-sm font-semibold">Key Layers Preview</h4>
+                      <span className="text-xs text-muted-foreground">{currentKeyLayers.length} layer{currentKeyLayers.length !== 1 ? 's' : ''}</span>
+                    </div>
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {currentKeyLayers.map((layer, index) => (
+                        <div
+                          key={layer.id}
+                          className={`flex items-center gap-2 p-2 rounded border ${
+                            selectedLayerId === layer.id
+                              ? 'border-primary bg-primary/10'
+                              : 'border-border bg-card'
+                          } cursor-pointer hover:bg-accent/50 transition-colors`}
+                          onClick={() => selectLayer(layer.id)}
+                        >
+                          <div className="text-xs text-muted-foreground w-6">#{index + 1}</div>
+                          <div className="flex-1">
+                            {layer.type === 'image' && layer.content ? (
+                              <img src={layer.content} alt="layer" className="h-8 w-auto max-w-[60px] object-contain" />
+                            ) : (
+                              <div className="text-sm truncate" style={{
+                                fontFamily: layer.font,
+                                fontSize: `${Math.min(layer.fontSize || 14, 16)}px`
+                              }}>
+                                {layer.content || 'Empty'}
+                              </div>
+                            )}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {layer.type === 'image' ? '🖼️' : '📝'}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
           </div>

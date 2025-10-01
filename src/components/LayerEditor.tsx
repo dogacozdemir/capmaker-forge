@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { KeycapLayer } from '@/types/keyboard';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
@@ -17,22 +17,16 @@ interface LayerEditorProps {
 const fonts = ['Arial', 'Helvetica', 'Times New Roman', 'Courier New', 'Verdana', 'Georgia'];
 
 const LayerEditor: React.FC<LayerEditorProps> = ({ layer, onLayerChange, onClose }) => {
-  const [localLayer, setLocalLayer] = useState(layer);
-
-  useEffect(() => {
-    setLocalLayer(layer);
-  }, [layer]);
-
-  useEffect(() => {
-    onLayerChange(localLayer);
-  }, [localLayer]);
+  const updateField = (field: keyof KeycapLayer, value: any) => {
+    onLayerChange({ [field]: value });
+  };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setLocalLayer(prev => ({ ...prev, content: reader.result as string }));
+        updateField('content', reader.result as string);
       };
       reader.readAsDataURL(file);
     }
@@ -52,8 +46,8 @@ const LayerEditor: React.FC<LayerEditorProps> = ({ layer, onLayerChange, onClose
           <div>
             <Label>Text Content</Label>
             <Input
-              value={localLayer.content}
-              onChange={(e) => setLocalLayer(prev => ({ ...prev, content: e.target.value }))}
+              value={layer.content}
+              onChange={(e) => updateField('content', e.target.value)}
               placeholder="Enter text"
             />
           </div>
@@ -61,8 +55,8 @@ const LayerEditor: React.FC<LayerEditorProps> = ({ layer, onLayerChange, onClose
           <div>
             <Label>Font</Label>
             <Select
-              value={localLayer.font || 'Arial'}
-              onValueChange={(value) => setLocalLayer(prev => ({ ...prev, font: value }))}
+              value={layer.font || 'Arial'}
+              onValueChange={(value) => updateField('font', value)}
             >
               <SelectTrigger>
                 <SelectValue />
@@ -76,10 +70,10 @@ const LayerEditor: React.FC<LayerEditorProps> = ({ layer, onLayerChange, onClose
           </div>
 
           <div>
-            <Label>Font Size: {localLayer.fontSize || 14}px</Label>
+            <Label>Font Size: {layer.fontSize || 14}px</Label>
             <Slider
-              value={[localLayer.fontSize || 14]}
-              onValueChange={([value]) => setLocalLayer(prev => ({ ...prev, fontSize: value }))}
+              value={[layer.fontSize || 14]}
+              onValueChange={([value]) => updateField('fontSize', value)}
               min={8}
               max={48}
               step={1}
@@ -90,8 +84,8 @@ const LayerEditor: React.FC<LayerEditorProps> = ({ layer, onLayerChange, onClose
         <div>
           <Label>Image</Label>
           <Input type="file" accept="image/*" onChange={handleImageUpload} />
-          {localLayer.content && (
-            <img src={localLayer.content} alt="Layer" className="mt-2 max-h-20 rounded" />
+          {layer.content && (
+            <img src={layer.content} alt="Layer" className="mt-2 max-h-20 rounded" />
           )}
         </div>
       )}
@@ -100,8 +94,8 @@ const LayerEditor: React.FC<LayerEditorProps> = ({ layer, onLayerChange, onClose
         <div>
           <Label>Horizontal</Label>
           <Select
-            value={localLayer.alignment || 'center'}
-            onValueChange={(value: any) => setLocalLayer(prev => ({ ...prev, alignment: value }))}
+            value={layer.alignment || 'center'}
+            onValueChange={(value: any) => updateField('alignment', value)}
           >
             <SelectTrigger>
               <SelectValue />
@@ -117,8 +111,8 @@ const LayerEditor: React.FC<LayerEditorProps> = ({ layer, onLayerChange, onClose
         <div>
           <Label>Vertical</Label>
           <Select
-            value={localLayer.verticalAlignment || 'center'}
-            onValueChange={(value: any) => setLocalLayer(prev => ({ ...prev, verticalAlignment: value }))}
+            value={layer.verticalAlignment || 'center'}
+            onValueChange={(value: any) => updateField('verticalAlignment', value)}
           >
             <SelectTrigger>
               <SelectValue />
@@ -133,10 +127,10 @@ const LayerEditor: React.FC<LayerEditorProps> = ({ layer, onLayerChange, onClose
       </div>
 
       <div>
-        <Label>X Offset: {localLayer.offsetX || 0}px</Label>
+        <Label>X Offset: {layer.offsetX || 0}px</Label>
         <Slider
-          value={[localLayer.offsetX || 0]}
-          onValueChange={([value]) => setLocalLayer(prev => ({ ...prev, offsetX: value }))}
+          value={[layer.offsetX || 0]}
+          onValueChange={([value]) => updateField('offsetX', value)}
           min={-30}
           max={30}
           step={1}
@@ -144,10 +138,10 @@ const LayerEditor: React.FC<LayerEditorProps> = ({ layer, onLayerChange, onClose
       </div>
 
       <div>
-        <Label>Y Offset: {localLayer.offsetY || 0}px</Label>
+        <Label>Y Offset: {layer.offsetY || 0}px</Label>
         <Slider
-          value={[localLayer.offsetY || 0]}
-          onValueChange={([value]) => setLocalLayer(prev => ({ ...prev, offsetY: value }))}
+          value={[layer.offsetY || 0]}
+          onValueChange={([value]) => updateField('offsetY', value)}
           min={-30}
           max={30}
           step={1}
@@ -155,10 +149,10 @@ const LayerEditor: React.FC<LayerEditorProps> = ({ layer, onLayerChange, onClose
       </div>
 
       <div>
-        <Label>Rotation: {localLayer.rotation || 0}°</Label>
+        <Label>Rotation: {layer.rotation || 0}°</Label>
         <Slider
-          value={[localLayer.rotation || 0]}
-          onValueChange={([value]) => setLocalLayer(prev => ({ ...prev, rotation: value }))}
+          value={[layer.rotation || 0]}
+          onValueChange={([value]) => updateField('rotation', value)}
           min={-180}
           max={180}
           step={1}
@@ -168,16 +162,16 @@ const LayerEditor: React.FC<LayerEditorProps> = ({ layer, onLayerChange, onClose
       <div className="flex gap-2">
         <Button
           size="sm"
-          variant={localLayer.mirrorX ? 'default' : 'outline'}
-          onClick={() => setLocalLayer(prev => ({ ...prev, mirrorX: !prev.mirrorX }))}
+          variant={layer.mirrorX ? 'default' : 'outline'}
+          onClick={() => updateField('mirrorX', !layer.mirrorX)}
         >
           <FlipHorizontal className="h-4 w-4 mr-1" />
           Mirror X
         </Button>
         <Button
           size="sm"
-          variant={localLayer.mirrorY ? 'default' : 'outline'}
-          onClick={() => setLocalLayer(prev => ({ ...prev, mirrorY: !prev.mirrorY }))}
+          variant={layer.mirrorY ? 'default' : 'outline'}
+          onClick={() => updateField('mirrorY', !layer.mirrorY)}
         >
           <FlipVertical className="h-4 w-4 mr-1" />
           Mirror Y
