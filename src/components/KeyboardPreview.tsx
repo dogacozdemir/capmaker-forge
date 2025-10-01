@@ -28,26 +28,30 @@ const KeyboardPreview: React.FC<KeyboardPreviewProps> = ({
   selectedLayerId,
   onLayerSelect,
 }) => {
-  const UNIT = 47;
+  const UNIT = 48;
   const SCALE = 1.1;
+  
+  // Keyboard case padding (like thockfactory - visible border around keycaps)
+  const CASE_PADDING = 26;
 
-  const baseWidth = layout.width * UNIT * SCALE;
-  const baseHeight = layout.height * UNIT * SCALE;
+  const keycapsWidth = layout.width * UNIT * SCALE;
+  const keycapsHeight = layout.height * UNIT * SCALE;
+  
+  const caseWidth = keycapsWidth + (CASE_PADDING * 2);
+  const caseHeight = keycapsHeight + (CASE_PADDING * 2);
 
   return (
-    <div className="relative h-full w-full">
+    <div className="relative h-full w-full flex items-center justify-center">
+      {/* Keyboard Case - dark background like real mechanical keyboard */}
       <div
-        className="relative bg-gradient-to-b from-background to-card border"
+        className="relative bg-gradient-to-br from-gray-800 via-gray-900 to-black"
         style={{
-          width: baseWidth,
-          height: baseHeight,
-          borderRadius: '32px',
-          border: '0.25px solid rgba(255, 255, 255, 0.1)',
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          transformOrigin: 'center center',
+          width: caseWidth,
+          height: caseHeight,
+          borderRadius: '20px',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          boxShadow: '0 20px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+          padding: CASE_PADDING,
         }}
         onContextMenu={(e) => e.preventDefault()}
         onClick={(e) => {
@@ -56,11 +60,12 @@ const KeyboardPreview: React.FC<KeyboardPreviewProps> = ({
           }
         }}
       >
+        {/* Keycaps container */}
         <div
           className="relative"
           style={{
-            width: baseWidth,
-            height: baseHeight,
+            width: keycapsWidth,
+            height: keycapsHeight,
           }}
         >
           {/* Keycaps */}
@@ -77,6 +82,7 @@ const KeyboardPreview: React.FC<KeyboardPreviewProps> = ({
               previewSelected={previewKeys.includes(keycap.id)}
               onClick={(event) => onKeySelect(keycap.id, event)}
               onDoubleClick={() => onKeyDoubleClick(keycap.id)}
+              scale={SCALE}
             />
           ))}
 
@@ -97,12 +103,14 @@ const KeyboardPreview: React.FC<KeyboardPreviewProps> = ({
                   onLayerSelect={onLayerSelect}
                   onClose={() => onLayerSelect && onLayerSelect('')}
                   keyPosition={{
-                    x: selectedKey.x * UNIT,
-                    y: selectedKey.y * UNIT,
-                    width: selectedKey.width * UNIT,
-                    height: selectedKey.height * UNIT,
+                    x: selectedKey.x * UNIT * SCALE,
+                    y: selectedKey.y * UNIT * SCALE,
+                    width: selectedKey.width * UNIT * SCALE,
+                    height: selectedKey.height * UNIT * SCALE,
                   }}
-                  unit={UNIT} padding={0}                />
+                  unit={UNIT * SCALE}
+                  padding={CASE_PADDING}
+                />
               );
             })()}
         </div>

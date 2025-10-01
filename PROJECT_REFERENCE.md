@@ -165,10 +165,12 @@ interface KeyboardConfig {
 ## Key Components
 
 ### KeyboardPreview
-- **Purpose**: 2D keyboard visualization with full-width scaling and layer preview
-- **Props**: layout, selectedKeys, onKeySelect, onKeyDoubleClick, editingKeyId, currentKeyLayers, selectedLayerId, onLayerSelect
-- **Features**: Click selection, double-click editing, visual feedback, flexible container sizing, compact layer preview
-- **Layout**: Flexbox-based container with centered keyboard preview and minimum width constraints
+- **Purpose**: 2D keyboard visualization with thockfactory-style case and proper centering
+- **Props**: layout, selectedKeys, onKeySelect, onKeyDoubleClick, editingKeyId, currentKeyLayers, selectedLayerId, onLayerSelect, previewKeys, keyRefs
+- **Features**: Click selection, double-click editing, visual feedback, realistic keyboard case, center-based scaling
+- **Layout**: Flexbox-based centering with thockfactory-style case design and proper padding
+- **Case Design**: Dark gradient background with realistic shadows and borders
+- **Scaling System**: Center-based scaling with CASE_PADDING for authentic mechanical keyboard appearance
 - **Layer Preview**: Shows compact layer buttons above selected key with theme-consistent styling
 
 ### Keyboard3D
@@ -177,9 +179,11 @@ interface KeyboardConfig {
 - **Features**: Orbit controls, lighting, shadows, animations
 
 ### KeycapPreview
-- **Purpose**: Individual keycap rendering with multi-layer support
-- **Props**: keycap, selected, onClick, onDoubleClick, scale
-- **Features**: Multi-layer rendering, legend positioning, font customization, image support
+- **Purpose**: Individual keycap rendering with multi-layer support and enhanced visual effects
+- **Props**: keycap, selected, previewSelected, onClick, onDoubleClick, scale
+- **Features**: Multi-layer rendering, legend positioning, font customization, image support, enhanced hover effects
+- **Visual Effects**: Strong hover states, multiselect visibility, ring effects, background highlights
+- **Universal Visibility**: Effects visible on both light and dark keycaps with proper contrast
 - **Layer Rendering**: Renders all layers with proper positioning, alignment, and styling
 
 ### EnhancedColorPicker
@@ -202,7 +206,7 @@ interface KeyboardConfig {
   - Real-time preview
 
 ### DragSelection
-- **Purpose**: Multi-key selection via drag with interactive background
+- **Purpose**: Multi-key selection via drag with static background
 - **Features**: 
   - **DOM-Based Selection**: Uses actual DOM positions via `getBoundingClientRect()` for pixel-perfect selection
   - **Area-Based Selection**: Selects keys completely inside the selection rectangle (not directional)
@@ -210,11 +214,10 @@ interface KeyboardConfig {
   - **Multi-selection Support**: Ctrl/Cmd + click for individual key selection
   - **Layout Agnostic**: Works with any padding, scroll, zoom, or CSS transformations
   - **Key References**: Uses `keyRefs` to access actual DOM elements for precise positioning
-  - **Interactive Background**: Smooth background animation when dragging on empty space
+  - **Static Background**: Gradient background with multiple layers for visual depth (animation disabled)
   - **Global Mouse Tracking**: Works across UI elements like FloatingToolbar using global event listeners
   - **Smart Element Detection**: Avoids interfering with interactive elements (buttons, inputs, etc.)
-  - **Dual Functionality**: Keyboard selection when dragging over keys, background animation when dragging on empty space
-  - **Smooth Animations**: Hardware-accelerated CSS transforms for background movement
+  - **Simplified Functionality**: Focused on keyboard selection with static background
   - **Z-Index Management**: Proper layering with background behind UI, above keycaps
 
 ### FloatingToolbar
@@ -385,15 +388,22 @@ interface KeyboardConfig {
 - Lighting and shadows
 - Animated keycaps
 
-### 9. Interactive Background System
-- **Smooth Background Animation**: Draggable background with smooth CSS transforms
-- **Dual Interaction Modes**: Keyboard selection when dragging over keys, background movement when dragging on empty space
-- **Global Mouse Tracking**: Works seamlessly across all UI elements including FloatingToolbar
+### 9. Interactive Background System (Disabled)
+- **Static Background**: Gradient background with multiple layers for visual depth
+- **Keyboard Selection**: Drag selection works seamlessly across all UI elements including FloatingToolbar
+- **Global Mouse Tracking**: Works across all UI elements with proper event handling
 - **Smart Element Detection**: Automatically detects interactive elements to avoid conflicts
-- **Hardware Acceleration**: Uses CSS transforms and `will-change` for smooth 60fps animations
-- **Layered Visual Effects**: Multiple gradient orbs with different movement speeds for depth
+- **Layered Visual Effects**: Multiple gradient orbs for visual depth (static)
 - **Z-Index Management**: Proper layering with background behind UI elements, above keycaps
-- **Centered Keyboard**: Keyboard remains centered while background moves around it
+- **Centered Keyboard**: Keyboard remains centered with thockfactory-style case design
+
+### 10. Keyboard Centering & Scaling System
+- **Thockfactory-Style Design**: Realistic keyboard case with dark gradient background
+- **Center-Based Scaling**: Keyboard scales from center instead of top-left corner
+- **Case Padding System**: 26px padding around keycaps for authentic mechanical keyboard appearance
+- **Flexbox Centering**: Reliable centering using `flex items-center justify-center`
+- **Visual Improvements**: Realistic shadows, borders, and gradient effects
+- **Scale Integration**: SCALE factor properly applied to both keycaps and case dimensions
 
 ## Development Scripts
 
@@ -615,7 +625,7 @@ import { KeyboardLayout } from '@/types/keyboard'
 
 ---
 
-*This reference document should be updated as the project evolves. Last updated: January 2025 - Interactive Background System*
+*This reference document should be updated as the project evolves. Last updated: January 2025 - Keyboard Centering & Visual Enhancements*
 
 ## Recent Updates - Multi-Layer System & UI Improvements (January 2025)
 
@@ -688,10 +698,10 @@ import { KeyboardLayout } from '@/types/keyboard'
 - **Reduced Confusion**: No more unexpected layer type changes or broken displays
 - **Smooth Workflow**: Seamless transition from text to image layers when needed
 
-## Latest Updates - Interactive Background System (January 2025)
+## Latest Updates - Interactive Background System & Keyboard Centering (January 2025)
 
 ### Interactive Background Implementation
-- **Background Animation**: Added smooth draggable background with CSS transforms
+- **Background Animation**: Added smooth draggable background with CSS transforms (later disabled per user request)
 - **Dual Functionality**: Keyboard selection when dragging over keys, background movement when dragging on empty space
 - **Global Mouse Events**: Implemented global mouse event listeners to work across all UI elements
 - **Smart Element Detection**: Added logic to detect interactive elements and avoid conflicts
@@ -702,16 +712,41 @@ import { KeyboardLayout } from '@/types/keyboard'
 
 ### DragSelection Enhancements
 - **Extended Functionality**: Enhanced existing DragSelection component instead of creating duplicate
-- **Background Integration**: Added background animation logic to existing drag selection system
+- **Background Integration**: Added background animation logic to existing drag selection system (later removed)
 - **Global Event Handling**: Replaced local mouse events with global listeners for seamless interaction
 - **Performance Optimization**: Used `will-change` CSS property and efficient animation loops
 - **Visual Feedback**: Selection box appears above keyboard with proper z-index layering
 - **FloatingToolbar Compatibility**: Drag selection works behind FloatingToolbar without interference
+- **Static Background**: Background animation disabled, maintaining static gradient background
+
+### Keyboard Centering & Scaling System
+- **Thockfactory-Style Design**: Implemented realistic keyboard case with dark gradient background
+- **Case Padding System**: Added 26px padding around keycaps for authentic mechanical keyboard appearance
+- **Center-Based Scaling**: Keyboard now scales from center instead of top-left corner
+- **Flexbox Centering**: Used `flex items-center justify-center` for reliable centering
+- **Proper Dimensions**: Case width/height calculated as `keycapsWidth + (CASE_PADDING * 2)`
+- **Visual Improvements**: Added realistic shadows, borders, and gradient effects
+- **Scale Integration**: SCALE factor properly applied to both keycaps and case dimensions
+
+### KeycapPreview Visual Enhancements
+- **Enhanced Hover Effects**: Improved hover states with stronger visual feedback
+- **Multiselect Visibility**: Enhanced preview selection effects for better visibility on all keycap colors
+- **Ring Effects**: Added stronger ring effects with higher opacity for better contrast
+- **Background Highlights**: Added subtle background color changes for selected states
+- **Universal Visibility**: Effects now visible on both light and dark keycaps
 
 ### Technical Implementation
-- **CSS Transforms**: Used `translate3d()` for hardware-accelerated animations
-- **Animation Loop**: Implemented smooth animation with `requestAnimationFrame`
+- **CSS Transforms**: Used `translate3d()` for hardware-accelerated animations (removed)
+- **Animation Loop**: Implemented smooth animation with `requestAnimationFrame` (removed)
 - **Event Management**: Global mouse event listeners with proper cleanup
-- **State Management**: Added background offset and animation state to existing component
+- **State Management**: Simplified state management after removing background animation
 - **Z-Index System**: Background (z-1), Keyboard (z-10), UI Elements (z-20), FloatingToolbar (z-50)
-- **Responsive Design**: Background animation works across all screen sizes
+- **Responsive Design**: Keyboard centering and scaling works across all screen sizes
+- **Performance**: Removed animation overhead for better performance
+
+### Component Architecture Updates
+- **KeyboardPreview**: Complete redesign with thockfactory-style case and proper centering
+- **KeycapPreview**: Enhanced visual effects and improved scale integration
+- **DragSelection**: Simplified after removing background animation functionality
+- **Index.tsx**: Updated to work with new keyboard centering system
+- **Layout System**: Improved flexbox-based centering for consistent positioning

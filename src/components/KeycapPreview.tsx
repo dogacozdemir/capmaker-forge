@@ -100,16 +100,14 @@ const KeycapPreview = forwardRef<HTMLDivElement, KeycapPreviewProps>(
         ref={ref}
         className={`
           absolute cursor-pointer transition-all duration-200 ease-out
-          border border-keycap-border shadow-keycap
-          hover:shadow-elevated hover:border-primary/50
-          ${selected ? 'border-primary shadow-elevated ring-2 ring-primary/30' : ''}
+          border border-gray-300 shadow-lg
+          hover:shadow-xl hover:border-primary hover:ring-2 hover:ring-primary/40 hover:bg-primary/10
+          ${selected ? 'border-primary shadow-xl ring-2 ring-primary/50 bg-primary/15' : ''}
           ${
             previewSelected && !selected
-              ? 'border-primary/60 shadow-elevated ring-1 ring-primary/20 bg-primary/5'
+              ? 'border-primary/80 shadow-xl ring-2 ring-primary/40 bg-primary/12'
               : ''
           }
-          shadow-[inset_0_1px_2px_rgba(255,255,255,0.1),inset_0_-1px_2px_rgba(0,0,0,0.2),0_2px_4px_rgba(0,0,0,0.3),0_1px_2px_rgba(0,0,0,0.1)]
-          hover:shadow-[inset_0_1px_3px_rgba(255,255,255,0.15),inset_0_-1px_3px_rgba(0,0,0,0.3),0_4px_8px_rgba(0,0,0,0.4),0_2px_4px_rgba(0,0,0,0.2)]
         `}
         style={{
           left: keycap.x * UNIT,
