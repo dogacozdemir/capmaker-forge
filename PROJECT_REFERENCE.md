@@ -202,7 +202,7 @@ interface KeyboardConfig {
   - Real-time preview
 
 ### DragSelection
-- **Purpose**: Multi-key selection via drag
+- **Purpose**: Multi-key selection via drag with interactive background
 - **Features**: 
   - **DOM-Based Selection**: Uses actual DOM positions via `getBoundingClientRect()` for pixel-perfect selection
   - **Area-Based Selection**: Selects keys completely inside the selection rectangle (not directional)
@@ -210,6 +210,12 @@ interface KeyboardConfig {
   - **Multi-selection Support**: Ctrl/Cmd + click for individual key selection
   - **Layout Agnostic**: Works with any padding, scroll, zoom, or CSS transformations
   - **Key References**: Uses `keyRefs` to access actual DOM elements for precise positioning
+  - **Interactive Background**: Smooth background animation when dragging on empty space
+  - **Global Mouse Tracking**: Works across UI elements like FloatingToolbar using global event listeners
+  - **Smart Element Detection**: Avoids interfering with interactive elements (buttons, inputs, etc.)
+  - **Dual Functionality**: Keyboard selection when dragging over keys, background animation when dragging on empty space
+  - **Smooth Animations**: Hardware-accelerated CSS transforms for background movement
+  - **Z-Index Management**: Proper layering with background behind UI, above keycaps
 
 ### FloatingToolbar
 - **Purpose**: Compact, centered toolbar for layer editing with multi-layer support
@@ -378,6 +384,16 @@ interface KeyboardConfig {
 - Orbit controls
 - Lighting and shadows
 - Animated keycaps
+
+### 9. Interactive Background System
+- **Smooth Background Animation**: Draggable background with smooth CSS transforms
+- **Dual Interaction Modes**: Keyboard selection when dragging over keys, background movement when dragging on empty space
+- **Global Mouse Tracking**: Works seamlessly across all UI elements including FloatingToolbar
+- **Smart Element Detection**: Automatically detects interactive elements to avoid conflicts
+- **Hardware Acceleration**: Uses CSS transforms and `will-change` for smooth 60fps animations
+- **Layered Visual Effects**: Multiple gradient orbs with different movement speeds for depth
+- **Z-Index Management**: Proper layering with background behind UI elements, above keycaps
+- **Centered Keyboard**: Keyboard remains centered while background moves around it
 
 ## Development Scripts
 
@@ -599,7 +615,7 @@ import { KeyboardLayout } from '@/types/keyboard'
 
 ---
 
-*This reference document should be updated as the project evolves. Last updated: January 2025*
+*This reference document should be updated as the project evolves. Last updated: January 2025 - Interactive Background System*
 
 ## Recent Updates - Multi-Layer System & UI Improvements (January 2025)
 
@@ -671,3 +687,31 @@ import { KeyboardLayout } from '@/types/keyboard'
 - **Visual Consistency**: All image-related UI elements work harmoniously together
 - **Reduced Confusion**: No more unexpected layer type changes or broken displays
 - **Smooth Workflow**: Seamless transition from text to image layers when needed
+
+## Latest Updates - Interactive Background System (January 2025)
+
+### Interactive Background Implementation
+- **Background Animation**: Added smooth draggable background with CSS transforms
+- **Dual Functionality**: Keyboard selection when dragging over keys, background movement when dragging on empty space
+- **Global Mouse Events**: Implemented global mouse event listeners to work across all UI elements
+- **Smart Element Detection**: Added logic to detect interactive elements and avoid conflicts
+- **Smooth Animations**: Hardware-accelerated CSS transforms with `requestAnimationFrame` for 60fps performance
+- **Layered Visual Effects**: Multiple gradient orbs with different movement speeds for visual depth
+- **Z-Index Management**: Proper layering system with background behind UI, above keycaps
+- **Centered Keyboard**: Keyboard remains centered while background moves around it
+
+### DragSelection Enhancements
+- **Extended Functionality**: Enhanced existing DragSelection component instead of creating duplicate
+- **Background Integration**: Added background animation logic to existing drag selection system
+- **Global Event Handling**: Replaced local mouse events with global listeners for seamless interaction
+- **Performance Optimization**: Used `will-change` CSS property and efficient animation loops
+- **Visual Feedback**: Selection box appears above keyboard with proper z-index layering
+- **FloatingToolbar Compatibility**: Drag selection works behind FloatingToolbar without interference
+
+### Technical Implementation
+- **CSS Transforms**: Used `translate3d()` for hardware-accelerated animations
+- **Animation Loop**: Implemented smooth animation with `requestAnimationFrame`
+- **Event Management**: Global mouse event listeners with proper cleanup
+- **State Management**: Added background offset and animation state to existing component
+- **Z-Index System**: Background (z-1), Keyboard (z-10), UI Elements (z-20), FloatingToolbar (z-50)
+- **Responsive Design**: Background animation works across all screen sizes

@@ -1,4 +1,5 @@
 import { KeyboardLayout, LayoutOption } from '@/types/keyboard';
+import { thockFactory60Layout } from './thockfactory-60-layout';
 
 export const layoutOptions: LayoutOption[] = [
   {
@@ -25,13 +26,13 @@ export const layoutOptions: LayoutOption[] = [
 const UNIT = 48;
 const GAP = 4;
 
-// Generate 60% layout (61 keys)
+// Generate 60% layout (61 keys) - ThockFactory Math
 const generate60Layout = (): KeyboardLayout => {
   const keys = [];
   let keyId = 0;
 
-  // Row 1 (Numbers and backspace)
-  const row1Keys = ['`', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '*', '-', 'Backspace'];
+  // Row 1 (Numbers and backspace) - This is the top row in 60%
+  const row1Keys = ['`', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 'Backspace'];
   let x = 0;
   row1Keys.forEach((legend, i) => {
     const width = legend === 'Backspace' ? 2 : 1;
@@ -42,9 +43,9 @@ const generate60Layout = (): KeyboardLayout => {
       width,
       height: 1,
       x,
-      y: 0,
-      color: '#2D3748',
-      textColor: '#FFFFFF',
+      y: 0, // Top row in our system
+      color: '#FFFFFF',
+      textColor: '#000000',
       layers: [{
         id: `layer-${keyId}-0`,
         type: 'text',
@@ -53,11 +54,11 @@ const generate60Layout = (): KeyboardLayout => {
         verticalAlignment: 'center',
       }],
     });
-    x += width + (width > 1 ? 0 : 0);
+    x += width;
   });
 
   // Row 2 (Tab and QWERTY)
-  const row2Keys = ['Tab', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', 'Ğ', 'Ü', '\\'];
+  const row2Keys = ['Tab', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '[', ']', '\\'];
   x = 0;
   row2Keys.forEach((legend, i) => {
     const width = legend === 'Tab' ? 1.5 : legend === '\\' ? 1.5 : 1;
@@ -68,9 +69,9 @@ const generate60Layout = (): KeyboardLayout => {
       width,
       height: 1,
       x,
-      y: 1,
-      color: '#2D3748',
-      textColor: '#FFFFFF',
+      y: 1, // Second row in our system
+      color: '#FFFFFF',
+      textColor: '#000000',
       layers: [{
         id: `layer-${keyId}-0`,
         type: 'text',
@@ -83,7 +84,7 @@ const generate60Layout = (): KeyboardLayout => {
   });
 
   // Row 3 (Caps Lock and ASDF)
-  const row3Keys = ['Caps', 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'Ş', "İ", 'Enter'];
+  const row3Keys = ['Caps', 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ';', "'", 'Enter'];
   x = 0;
   row3Keys.forEach((legend, i) => {
     const width = legend === 'Caps' ? 1.75 : legend === 'Enter' ? 2.25 : 1;
@@ -94,9 +95,9 @@ const generate60Layout = (): KeyboardLayout => {
       width,
       height: 1,
       x,
-      y: 2,
-      color: '#2D3748',
-      textColor: '#FFFFFF',
+      y: 2, // Third row in our system
+      color: '#FFFFFF',
+      textColor: '#000000',
       layers: [{
         id: `layer-${keyId}-0`,
         type: 'text',
@@ -109,7 +110,7 @@ const generate60Layout = (): KeyboardLayout => {
   });
 
   // Row 4 (Shift and ZXCV)
-  const row4Keys = ['Shift', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', 'Ö', 'Ç', ':', 'Shift'];
+  const row4Keys = ['Shift', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', ',', '.', '/', 'Shift'];
   x = 0;
   row4Keys.forEach((legend, i) => {
     const width = legend === 'Shift' ? (i === 0 ? 2.25 : 2.75) : 1;
@@ -120,9 +121,9 @@ const generate60Layout = (): KeyboardLayout => {
       width,
       height: 1,
       x,
-      y: 3,
-      color: '#2D3748',
-      textColor: '#FFFFFF',
+      y: 3, // Fourth row in our system
+      color: '#FFFFFF',
+      textColor: '#000000',
       layers: [{
         id: `layer-${keyId}-0`,
         type: 'text',
@@ -134,11 +135,12 @@ const generate60Layout = (): KeyboardLayout => {
     x += width;
   });
 
-  // Row 5 (Bottom row)
+  // Row 5 (Bottom row) - ThockFactory exact sizing
   const row5Keys = ['Ctrl', 'Win', 'Alt', 'Space', 'Alt', 'Fn', 'Menu', 'Ctrl'];
+  const row5Widths = [1.25, 1.25, 1.25, 6.25, 1.25, 1.25, 1.25, 1.25]; // Exact ThockFactory sizing
   x = 0;
   row5Keys.forEach((legend, i) => {
-    const width = legend === 'Space' ? 6.25 : legend === 'Ctrl' || legend === 'Win' || legend === 'Alt' ? 1.25 : 1;
+    const width = row5Widths[i];
     keys.push({
       id: `key-${keyId++}`,
       row: 4,
@@ -146,9 +148,9 @@ const generate60Layout = (): KeyboardLayout => {
       width,
       height: 1,
       x,
-      y: 4,
-      color: '#2D3748',
-      textColor: '#FFFFFF',
+      y: 4, // Bottom row in our system
+      color: '#FFFFFF',
+      textColor: '#000000',
       layers: [{
         id: `layer-${keyId}-0`,
         type: 'text',
@@ -162,11 +164,11 @@ const generate60Layout = (): KeyboardLayout => {
 
   return {
     id: '60%',
-    name: '60% Compact',
+    name: '60% Compact (ThockFactory Math)',
     keys,
     totalKeys: 61,
-    width: 15,
-    height: 5,
+    width: 15, // 1.25+1.25+1.25+6.25+1.25+1.25+1.25+1.25 = 15 units
+    height: 5, // 5 rows
   };
 };
 
@@ -317,6 +319,7 @@ const generateFullLayout = (): KeyboardLayout => {
 
 export const keyboardLayouts: Record<string, KeyboardLayout> = {
   '60%': generate60Layout(),
+  'thockfactory-60': thockFactory60Layout,
   'TKL': generateTKLLayout(),
   'Full': generateFullLayout(),
 };

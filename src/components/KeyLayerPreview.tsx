@@ -22,21 +22,14 @@ const KeyLayerPreview: React.FC<KeyLayerPreviewProps> = ({
 }) => {
   const previewRef = useRef<HTMLDivElement>(null);
 
-  // Click-outside effect to close layer preview
+  // Click-outside effect to close
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Node;
-      
-      // Check if click is outside the preview container
-      if (previewRef.current && !previewRef.current.contains(target)) {
-        // Call onClose if it exists
-        if (onClose) {
-          onClose();
-        }
+      if (previewRef.current && !previewRef.current.contains(event.target as Node)) {
+        onClose?.();
       }
     };
 
-    // Add a small delay to prevent immediate closing when opening
     const timeoutId = setTimeout(() => {
       document.addEventListener('mousedown', handleClickOutside);
     }, 100);
@@ -47,13 +40,12 @@ const KeyLayerPreview: React.FC<KeyLayerPreviewProps> = ({
     };
   }, [onClose]);
 
-  // Early return after all hooks
   if (layers.length === 0 || !selectedLayerId) return null;
 
-  // Calculate position above the selected key with more space
+  // Position relative to key center
   const keyCenterX = keyPosition.x + keyPosition.width / 2;
-  const keyTopY = keyPosition.y;
-  const previewY = keyTopY - 45; // 45px above the key to avoid blocking
+  const keyCenterY = keyPosition.y + keyPosition.height / 2;
+  const previewY = keyCenterY - 60; // biraz yukarıda olsun
 
   return (
     <div
@@ -62,7 +54,8 @@ const KeyLayerPreview: React.FC<KeyLayerPreviewProps> = ({
       style={{
         left: keyCenterX,
         top: previewY,
-        transform: 'translateX(-50%)',
+        transform: 'translate(-50%, -50%)',
+        transformOrigin: 'center center',
       }}
     >
       <div className="bg-card/25 backdrop-blur-sm border border-border rounded-lg shadow-elevated p-2 flex gap-1.5 items-center">
@@ -79,7 +72,7 @@ const KeyLayerPreview: React.FC<KeyLayerPreviewProps> = ({
               }
             `}
           >
-            {layer.type === 'image' && layer.content && layer.content.trim() !== '' ? (
+            {layer.type === 'image' && layer.content?.trim() !== '' ? (
               <img
                 src={layer.content}
                 alt="layer"

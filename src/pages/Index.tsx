@@ -108,10 +108,11 @@ const Index = () => {
     return '#FFFFFF'; // Default text color
   };
 
+
   return (
     <div className="h-screen bg-background flex flex-col overflow-hidden">
-      {/* Header */}
-      <header className="border-b border-border bg-card/50 backdrop-blur h-16">
+        {/* Header */}
+        <header className="border-b border-border bg-card/50 backdrop-blur h-16 relative z-20">
         <div className="w-full px-4 h-full">
           <div className="flex items-center justify-between h-full max-w-full">
             {/* Left side - Logo */}
@@ -170,92 +171,96 @@ const Index = () => {
       </header>
 
 
-      {/* Main Content */}
-      <div className="w-full flex-1 flex overflow-hidden">
-        {/* Left Panel - Unified Sidebar */}
-        <div className="w-80 xl:w-96 flex-shrink-0 h-full overflow-y-auto">
-          <UnifiedSidebar
-            layouts={layoutOptions}
-            selectedLayout={config.layout.id as any}
-            onLayoutChange={changeLayout}
-            groups={config.groups}
-            selectedKeys={config.selectedKeys}
-            onSaveGroup={saveGroup}
-            onLoadGroup={loadGroup}
-            onDeleteGroup={deleteGroup}
-            editingKeyId={editingKeyId}
-            currentKeyLayers={currentKeyLayers}
-            selectedLayerId={selectedLayerId}
-            onLayerSelect={selectLayer}
-            onLayerReorder={(layerId, direction) => editingKeyId && reorderLayer(editingKeyId, layerId, direction)}
-            onLayerDelete={(layerId) => editingKeyId && deleteLayer(editingKeyId, layerId)}
-            onAddTextLayer={() => {
-              editingKeyId && addLayer(editingKeyId, 'text');
-            }}
-            onAddImageLayer={() => {
-              editingKeyId && addLayer(editingKeyId, 'image');
-            }}
-          />
-        </div>
+        {/* Main Content */}
+        <div className="w-full flex-1 flex overflow-hidden relative z-10">
+            {/* Left Panel - Unified Sidebar */}
+            <div className="w-80 xl:w-96 flex-shrink-0 h-full overflow-y-auto relative z-20 bg-card/80 backdrop-blur-sm">
+            <UnifiedSidebar
+              layouts={layoutOptions}
+              selectedLayout={config.layout.id as any}
+              onLayoutChange={changeLayout}
+              groups={config.groups}
+              selectedKeys={config.selectedKeys}
+              onSaveGroup={saveGroup}
+              onLoadGroup={loadGroup}
+              onDeleteGroup={deleteGroup}
+              editingKeyId={editingKeyId}
+              currentKeyLayers={currentKeyLayers}
+              selectedLayerId={selectedLayerId}
+              onLayerSelect={selectLayer}
+              onLayerReorder={(layerId, direction) => editingKeyId && reorderLayer(editingKeyId, layerId, direction)}
+              onLayerDelete={(layerId) => editingKeyId && deleteLayer(editingKeyId, layerId)}
+              onAddTextLayer={() => {
+                editingKeyId && addLayer(editingKeyId, 'text');
+              }}
+              onAddImageLayer={() => {
+                editingKeyId && addLayer(editingKeyId, 'image');
+              }}
+            />
+          </div>
 
-        {/* Right Panel - Preview */}
-        <div className="flex-1 min-w-0 px-4 py-6 relative">
-            <div className="space-y-4 h-full">
-
-              {/* Floating Toolbar */}
-              <FloatingToolbar
-                selectedColor={getCurrentColor()}
-                selectedTextColor={getCurrentTextColor()}
-                onColorChange={handleColorChange}
-                onTextColorChange={handleTextColorChange}
-                selectedKeysCount={config.selectedKeys.length}
-                editingKey={editingKey}
-                selectedLayer={selectedLayer}
-                onLayerUpdate={updateLayer}
-                onLegendChange={(keyId, layerId, content) => {
-                  updateLayer(keyId, layerId, { content });
-                }}
-              />
+            {/* Right Panel - Preview */}
+            <div className="flex-1 min-w-0 px-4 py-6 relative z-10">
+              {/* Floating Toolbar - Positioned absolutely to float over content */}
+              <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50 pointer-events-none">
+                <div className="pointer-events-auto">
+                  <FloatingToolbar
+                    selectedColor={getCurrentColor()}
+                    selectedTextColor={getCurrentTextColor()}
+                    onColorChange={handleColorChange}
+                    onTextColorChange={handleTextColorChange}
+                    selectedKeysCount={config.selectedKeys.length}
+                    editingKey={editingKey}
+                    selectedLayer={selectedLayer}
+                    onLayerUpdate={updateLayer}
+                    onLegendChange={(keyId, layerId, content) => {
+                      updateLayer(keyId, layerId, { content });
+                    }}
+                  />
+                </div>
+              </div>
               
-              {/* Preview Area */}
-              {view3D ? (
-                <Keyboard3D
-                  layout={config.layout}
-                  selectedKeys={config.selectedKeys}
-                  onKeySelect={(keyId) => handleKeySelect(keyId)}
-                  onKeyDoubleClick={handleKeyDoubleClick}
-                />
-              ) : (
-                <DragSelection
-                  layout={config.layout}
-                  selectedKeys={config.selectedKeys}
-                  onKeysSelect={handleDragSelection}
-                >
-                  <KeyboardPreview
+              <div className="h-full flex items-center justify-center">
+                
+                {/* Preview Area */}
+                {view3D ? (
+                  <Keyboard3D
                     layout={config.layout}
                     selectedKeys={config.selectedKeys}
-                    onKeySelect={handleKeySelect}
+                    onKeySelect={(keyId) => handleKeySelect(keyId)}
                     onKeyDoubleClick={handleKeyDoubleClick}
-                    editingKeyId={editingKeyId}
-                    currentKeyLayers={currentKeyLayers}
-                    selectedLayerId={selectedLayerId}
-                    onLayerSelect={handleLayerSelect}
                   />
-                </DragSelection>
-              )}
-              
+                ) : (
+                  <DragSelection
+                    layout={config.layout}
+                    selectedKeys={config.selectedKeys}
+                    onKeysSelect={handleDragSelection}
+                  >
+                    <KeyboardPreview
+                      layout={config.layout}
+                      selectedKeys={config.selectedKeys}
+                      onKeySelect={handleKeySelect}
+                      onKeyDoubleClick={handleKeyDoubleClick}
+                      editingKeyId={editingKeyId}
+                      currentKeyLayers={currentKeyLayers}
+                      selectedLayerId={selectedLayerId}
+                      onLayerSelect={handleLayerSelect}
+                    />
+                  </DragSelection>
+                )}
+                
+              </div>
             </div>
           </div>
-        </div>
 
-      {/* Footer */}
-      <footer className="border-t border-border bg-card/30 backdrop-blur mt-auto">
+        {/* Footer */}
+        <footer className="border-t border-border bg-card/30 backdrop-blur mt-auto relative z-20">
           <div className="w-full px-4 py-3">
             <div className="text-center text-sm text-muted-foreground">
            Ⓒ2025 Qeeboard - Terms of Use | Privacy Policy | Contact | Support
             </div>
           </div>
-      </footer>
+        </footer>
     </div>
   );
 };

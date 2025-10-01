@@ -44,6 +44,12 @@ All colors MUST be HSL.
     --keycap-legend: 210 40% 98%;
     --keycap-border: 217 33% 24%;
     
+    /* Keyboard case effect tokens */
+    --keyboard-case: 0 0% 10%;
+    --keyboard-case-gradient: linear-gradient(135deg, hsl(0 0% 10%) 0%, hsl(0 0% 6%) 50%, hsl(0 0% 10%) 100%);
+    --keyboard-mount: 0 0% 8%;
+    --keyboard-mount-gradient: linear-gradient(135deg, hsl(0 0% 6%) 0%, hsl(0 0% 10%) 50%, hsl(0 0% 6%) 100%);
+    
     /* Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(199 89% 48%), hsl(199 89% 60%));
     --gradient-keycap: linear-gradient(145deg, hsl(217 33% 18%), hsl(217 33% 14%));
