@@ -42,7 +42,7 @@ const ExportPanel: React.FC<ExportPanelProps> = ({ config }) => {
       layout: config.layout.name,
       totalKeys: config.layout.totalKeys,
       customizedKeys: config.layout.keys.filter(key => 
-        key.color !== '#2D3748' || key.legend !== getDefaultLegend(key.legend)
+        key.color !== '#2D3748' || (key.layers && key.layers.length > 1)
       ).length,
       groups: Object.keys(config.groups).length,
     };

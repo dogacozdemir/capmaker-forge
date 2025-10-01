@@ -1,5 +1,5 @@
 import React, { forwardRef } from 'react';
-import { KeycapConfig } from '@/types/keyboard';
+import { KeycapConfig, KeycapLayer } from '@/types/keyboard';
 
 interface KeycapPreviewProps {
   keycap: KeycapConfig;
@@ -23,6 +23,70 @@ const KeycapPreview = forwardRef<HTMLDivElement, KeycapPreviewProps>(({
   
   const width = keycap.width * UNIT;
   const height = keycap.height * UNIT;
+
+  const renderLayer = (layer: KeycapLayer) => {
+    const baseTransform = `
+      translate(${(layer.offsetX || 0) * scale}px, ${(layer.offsetY || 0) * scale}px)
+      rotate(${layer.rotation || 0}deg)
+      scaleX(${layer.mirrorX ? -1 : 1})
+      scaleY(${layer.mirrorY ? -1 : 1})
+    `;
+
+    const containerStyle: React.CSSProperties = {
+      position: 'absolute',
+      inset: 0,
+      display: 'flex',
+      alignItems: 
+        layer.verticalAlignment === 'top' ? 'flex-start' :
+        layer.verticalAlignment === 'bottom' ? 'flex-end' :
+        'center',
+      justifyContent:
+        layer.alignment === 'left' ? 'flex-start' :
+        layer.alignment === 'right' ? 'flex-end' :
+        'center',
+      padding: '4px',
+      pointerEvents: 'none',
+    };
+
+    if (layer.type === 'image' && layer.content) {
+      return (
+        <div key={layer.id} style={containerStyle}>
+          <img
+            src={layer.content}
+            alt="layer"
+            style={{
+              maxWidth: '80%',
+              maxHeight: '80%',
+              objectFit: 'contain',
+              transform: baseTransform,
+            }}
+            draggable={false}
+          />
+        </div>
+      );
+    }
+
+    // Text layer
+    return (
+      <div key={layer.id} style={containerStyle}>
+        <div
+          style={{
+            fontFamily: layer.font || 'inherit',
+            fontSize: `${(layer.fontSize || 14) * scale}px`,
+            fontWeight: layer.bold ? 'bold' : 'normal',
+            fontStyle: layer.italic ? 'italic' : 'normal',
+            textDecoration: layer.underline ? 'underline' : 'none',
+            color: layer.color || keycap.textColor,
+            transform: baseTransform,
+            textAlign: layer.alignment || 'center',
+            whiteSpace: 'pre-wrap',
+          }}
+        >
+          {layer.content || ''}
+        </div>
+      </div>
+    );
+  };
   
   return (
     <div
@@ -43,13 +107,11 @@ const KeycapPreview = forwardRef<HTMLDivElement, KeycapPreviewProps>(({
         background: keycap.color || '#2D3748',
       }}
       onMouseDown={(e) => {
-        // Only stop propagation for ctrl/cmd+click (multi-select)
         if (e.ctrlKey || e.metaKey) {
           e.stopPropagation();
         }
       }}
       onClick={(e) => {
-        // Only stop propagation for ctrl/cmd+click (multi-select)
         if (e.ctrlKey || e.metaKey) {
           e.stopPropagation();
         }
@@ -60,53 +122,7 @@ const KeycapPreview = forwardRef<HTMLDivElement, KeycapPreviewProps>(({
         onDoubleClick();
       }}
     >
-      <div
-        className="absolute inset-0 flex"
-        style={{
-          alignItems: keycap.legendVerticalAlignment === 'top' ? 'flex-start' : 
-                     keycap.legendVerticalAlignment === 'bottom' ? 'flex-end' : 'center',
-          justifyContent: keycap.legendAlignment === 'left' ? 'flex-start' : 
-                         keycap.legendAlignment === 'right' ? 'flex-end' : 'center',
-          transform: `translate(${(keycap.legendOffsetX ?? 0) * scale}px, ${(keycap.legendOffsetY ?? 0) * scale}px)`
-        }}
-      >
-        {keycap.legendMode === 'image' && keycap.legendImage ? (
-          <img
-            src={keycap.legendImage}
-            alt="Key legend image"
-            className="pointer-events-none select-none"
-            style={{
-              maxWidth: '80%',
-              maxHeight: '80%',
-              transform: `
-                scale(${(keycap.legendFontSize ?? 14) / 14})
-                rotate(${keycap.legendRotation ?? 0}deg)
-                scaleX(${keycap.legendMirrorX ? -1 : 1})
-                scaleY(${keycap.legendMirrorY ? -1 : 1})
-              `,
-            }}
-          />
-        ) : (
-          <span
-            className="text-xs font-medium pointer-events-none select-none"
-            style={{
-              color: keycap.textColor,
-              fontSize: (keycap.legendFontSize ?? Math.max(8 * scale, 10)),
-              fontFamily: keycap.legendFont ?? undefined,
-              fontWeight: keycap.legendBold ? 'bold' : 'normal',
-              fontStyle: keycap.legendItalic ? 'italic' : 'normal',
-              textDecoration: keycap.legendUnderline ? 'underline' : 'none',
-              transform: `
-                rotate(${keycap.legendRotation ?? 0}deg)
-                scaleX(${keycap.legendMirrorX ? -1 : 1})
-                scaleY(${keycap.legendMirrorY ? -1 : 1})
-              `,
-            }}
-          >
-            {keycap.legend}
-          </span>
-        )}
-      </div>
+      {keycap.layers?.map(layer => renderLayer(layer))}
       
       {/* Keycap highlight effect */}
       <div

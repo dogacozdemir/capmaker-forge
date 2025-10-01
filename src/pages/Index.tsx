@@ -6,7 +6,9 @@ import KeyboardPreview from '@/components/KeyboardPreview';
 import Keyboard3D from '@/components/Keyboard3D';
 import DragSelection from '@/components/DragSelection';
 import FloatingToolbar from '@/components/FloatingToolbar';
-import { Box, Monitor, ShoppingCart, User, Eye } from 'lucide-react';
+import LayerManager from '@/components/LayerManager';
+import LayerEditor from '@/components/LayerEditor';
+import { Box, Monitor, ShoppingCart, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const Index = () => {
@@ -15,14 +17,13 @@ const Index = () => {
   const {
     config,
     editingKeyId,
+    selectedLayerId,
     changeLayout,
     selectKey,
     selectKeys,
     clearSelection,
     updateKeycapColor,
     updateKeycapTextColor,
-    updateKeycapLegend,
-    updateKeycapLegendSettings,
     startEditingKey,
     stopEditingKey,
     getSelectedKey,
@@ -30,10 +31,20 @@ const Index = () => {
     saveGroup,
     loadGroup,
     deleteGroup,
+    addLayer,
+    deleteLayer,
+    reorderLayer,
+    updateLayer,
+    getKeyLayers,
+    selectLayer,
   } = useKeyboardConfig();
 
   const selectedKeys = getSelectedKeys();
   const editingKey = getSelectedKey();
+  const currentKeyLayers = editingKeyId ? getKeyLayers(editingKeyId) : [];
+  const selectedLayer = selectedLayerId 
+    ? currentKeyLayers.find(l => l.id === selectedLayerId) 
+    : null;
 
   const handleKeySelect = (keyId: string, event?: React.MouseEvent) => {
     const multiSelect = event?.ctrlKey || event?.metaKey;
@@ -141,6 +152,33 @@ const Index = () => {
             onDeleteGroup={deleteGroup}
             config={config}
           />
+          
+          {/* Layer Management - Show when a single key is selected */}
+          {editingKeyId && config.selectedKeys.length === 1 && (
+            <div className="p-4 space-y-4">
+              <LayerManager
+                layers={currentKeyLayers}
+                selectedLayerId={selectedLayerId}
+                onLayerSelect={selectLayer}
+                onLayerReorder={(layerId, direction) => reorderLayer(editingKeyId, layerId, direction)}
+                onLayerDelete={(layerId) => deleteLayer(editingKeyId, layerId)}
+                onAddTextLayer={() => {
+                  addLayer(editingKeyId, 'text');
+                }}
+                onAddImageLayer={() => {
+                  addLayer(editingKeyId, 'image');
+                }}
+              />
+              
+              {selectedLayer && (
+                <LayerEditor
+                  layer={selectedLayer}
+                  onLayerChange={(updates) => updateLayer(editingKeyId, selectedLayer.id, updates)}
+                  onClose={() => selectLayer(null)}
+                />
+              )}
+            </div>
+          )}
         </div>
 
         {/* Right Panel - Preview */}
@@ -155,10 +193,8 @@ const Index = () => {
                 onTextColorChange={handleTextColorChange}
                 selectedKeysCount={config.selectedKeys.length}
                 editingKey={editingKey}
-                onLegendSettingsChange={(keyId, settings) =>
-                  updateKeycapLegendSettings(keyId, settings)
-                }
-                onLegendChange={updateKeycapLegend}
+                onLegendSettingsChange={() => {}}
+                onLegendChange={() => {}}
               />
               
               {/* Preview Area */}

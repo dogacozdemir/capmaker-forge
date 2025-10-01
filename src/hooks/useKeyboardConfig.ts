@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
-import { KeyboardConfig, LayoutType, KeycapConfig } from '@/types/keyboard';
+import { KeyboardConfig, LayoutType, KeycapConfig, KeycapLayer } from '@/types/keyboard';
 import { keyboardLayouts } from '@/data/layouts';
+import { useLayerManagement } from './useLayerManagement';
 
 export const useKeyboardConfig = () => {
   const [config, setConfig] = useState<KeyboardConfig>({
@@ -20,6 +21,9 @@ export const useKeyboardConfig = () => {
   });
 
   const [editingKeyId, setEditingKeyId] = useState<string | null>(null);
+  const [selectedLayerId, setSelectedLayerId] = useState<string | null>(null);
+
+  const { addLayer, deleteLayer, reorderLayer, updateLayer } = useLayerManagement(config, setConfig);
 
   const changeLayout = useCallback((layoutType: LayoutType) => {
     setConfig(prev => {
@@ -91,43 +95,13 @@ export const useKeyboardConfig = () => {
     });
   }, []);
 
-  const updateKeycapLegend = useCallback((keyId: string, legend: string) => {
-    setConfig(prev => {
-      const updatedKeys = prev.layout.keys.map(key =>
-        key.id === keyId ? { ...key, legend, legendMode: 'text' as const } : key
-      );
-      const currentType = prev.currentLayoutType;
-      const updatedLayout = { ...prev.layout, keys: updatedKeys };
-      return {
-        ...prev,
-        layout: updatedLayout,
-        allLayouts: {
-          ...prev.allLayouts,
-          [currentType]: updatedLayout,
-        },
-      };
-    });
-  }, []);
+  const getKeyLayers = useCallback((keyId: string): KeycapLayer[] => {
+    const key = config.layout.keys.find(k => k.id === keyId);
+    return key?.layers || [];
+  }, [config.layout.keys]);
 
-  const updateKeycapLegendSettings = useCallback((
-    keyId: string,
-    settings: Partial<Pick<KeycapConfig, 'legend' | 'legendMode' | 'legendImage' | 'legendFont' | 'legendFontSize' | 'legendOffsetX' | 'legendOffsetY' | 'legendAlignment' | 'legendVerticalAlignment' | 'legendRotation' | 'legendMirrorX' | 'legendMirrorY'>>
-  ) => {
-    setConfig(prev => {
-      const updatedKeys = prev.layout.keys.map(key =>
-        key.id === keyId ? { ...key, ...settings } : key
-      );
-      const currentType = prev.currentLayoutType;
-      const updatedLayout = { ...prev.layout, keys: updatedKeys };
-      return {
-        ...prev,
-        layout: updatedLayout,
-        allLayouts: {
-          ...prev.allLayouts,
-          [currentType]: updatedLayout,
-        },
-      };
-    });
+  const selectLayer = useCallback((layerId: string | null) => {
+    setSelectedLayerId(layerId);
   }, []);
 
   const startEditingKey = useCallback((keyId: string) => {
@@ -187,14 +161,13 @@ export const useKeyboardConfig = () => {
   return {
     config,
     editingKeyId,
+    selectedLayerId,
     changeLayout,
     selectKey,
     selectKeys,
     clearSelection,
     updateKeycapColor,
     updateKeycapTextColor,
-    updateKeycapLegend,
-    updateKeycapLegendSettings,
     startEditingKey,
     stopEditingKey,
     getSelectedKey,
@@ -202,5 +175,12 @@ export const useKeyboardConfig = () => {
     saveGroup,
     loadGroup,
     deleteGroup,
+    // Layer management
+    addLayer,
+    deleteLayer,
+    reorderLayer,
+    updateLayer,
+    getKeyLayers,
+    selectLayer,
   };
 };

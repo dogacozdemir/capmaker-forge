@@ -43,9 +43,15 @@ const generate60Layout = (): KeyboardLayout => {
       height: 1,
       x,
       y: 0,
-      legend,
       color: '#2D3748',
       textColor: '#FFFFFF',
+      layers: [{
+        id: `layer-${keyId}-0`,
+        type: 'text',
+        content: legend,
+        alignment: 'center',
+        verticalAlignment: 'center',
+      }],
     });
     x += width + (width > 1 ? 0 : 0);
   });
@@ -63,9 +69,15 @@ const generate60Layout = (): KeyboardLayout => {
       height: 1,
       x,
       y: 1,
-      legend,
       color: '#2D3748',
       textColor: '#FFFFFF',
+      layers: [{
+        id: `layer-${keyId}-0`,
+        type: 'text',
+        content: legend,
+        alignment: 'center',
+        verticalAlignment: 'center',
+      }],
     });
     x += width;
   });
@@ -83,9 +95,15 @@ const generate60Layout = (): KeyboardLayout => {
       height: 1,
       x,
       y: 2,
-      legend,
       color: '#2D3748',
       textColor: '#FFFFFF',
+      layers: [{
+        id: `layer-${keyId}-0`,
+        type: 'text',
+        content: legend,
+        alignment: 'center',
+        verticalAlignment: 'center',
+      }],
     });
     x += width;
   });
@@ -103,9 +121,15 @@ const generate60Layout = (): KeyboardLayout => {
       height: 1,
       x,
       y: 3,
-      legend,
       color: '#2D3748',
       textColor: '#FFFFFF',
+      layers: [{
+        id: `layer-${keyId}-0`,
+        type: 'text',
+        content: legend,
+        alignment: 'center',
+        verticalAlignment: 'center',
+      }],
     });
     x += width;
   });
@@ -123,9 +147,15 @@ const generate60Layout = (): KeyboardLayout => {
       height: 1,
       x,
       y: 4,
-      legend,
       color: '#2D3748',
       textColor: '#FFFFFF',
+      layers: [{
+        id: `layer-${keyId}-0`,
+        type: 'text',
+        content: legend,
+        alignment: 'center',
+        verticalAlignment: 'center',
+      }],
     });
     x += width;
   });
@@ -156,9 +186,15 @@ const generateTKLLayout = (): KeyboardLayout => {
       height: 1,
       x: i + (i > 3 ? 0.5 : 0) + (i > 7 ? 0.5 : 0) + (i > 11 ? 0.5 : 0),
       y: 0,
-      legend,
       color: '#2D3748',
       textColor: '#FFFFFF',
+      layers: [{
+        id: `layer-${keyId}-0`,
+        type: 'text',
+        content: legend,
+        alignment: 'center',
+        verticalAlignment: 'center',
+      }],
     });
   });
 
@@ -195,9 +231,15 @@ const generateTKLLayout = (): KeyboardLayout => {
       height: 1,
       x,
       y,
-      legend,
       color: '#2D3748',
       textColor: '#FFFFFF',
+      layers: [{
+        id: `layer-${keyId}-0`,
+        type: 'text',
+        content: legend,
+        alignment: 'center',
+        verticalAlignment: 'center',
+      }],
     });
   });
 
@@ -251,9 +293,15 @@ const generateFullLayout = (): KeyboardLayout => {
       height: h,
       x,
       y,
-      legend,
       color: '#2D3748',
       textColor: '#FFFFFF',
+      layers: [{
+        id: `layer-${keyId}-0`,
+        type: 'text',
+        content: legend,
+        alignment: 'center',
+        verticalAlignment: 'center',
+      }],
     });
   });
 
