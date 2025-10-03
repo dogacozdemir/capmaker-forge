@@ -63,7 +63,7 @@ export function generateSVGKeycap(
   const UNIT = 48 * scale;
   const KEY_SPACING = 4 * scale;
   const BORDER_RADIUS = 2 * scale;
-  const INNER_RADIUS = 3 * scale;
+  const INNER_RADIUS = 3 * scale; // Match CSS version exactly
 
   const width = keycap.width * UNIT - KEY_SPACING;
   const height = keycap.height * UNIT - KEY_SPACING;
@@ -86,7 +86,6 @@ export function generateSVGKeycap(
 
   const renderLayer = (layer: KeycapLayer, index: number): string => {
     const transform = `
-      translate(${(layer.offsetX || 0) * scale}, ${(layer.offsetY || 0) * scale})
       rotate(${layer.rotation || 0})
       scale(${layer.mirrorX ? -1 : 1}, ${layer.mirrorY ? -1 : 1})
     `;
@@ -120,31 +119,35 @@ export function generateSVGKeycap(
     const textColor = layer.color || keycap.textColor || '#ffffff';
     const textHsl = hexToHsl(textColor);
 
-    // Calculate text position based on alignment within innerSquare bounds (1:1 match)
+    // Calculate text position using CSS flexbox logic
+    // CSS version uses: inset: 0, padding: 4px, flex center
     const innerX = keycapShape.legendArea.x * scale;
     const innerY = keycapShape.legendArea.y * scale;
     const innerWidth = keycapShape.legendArea.width * scale;
     const innerHeight = keycapShape.legendArea.height * scale;
     
-    // No padding - use full innerSquare area
-    let textX = innerX + innerWidth / 2;
-    let textY = innerY + innerHeight / 2;
+    const padding = 4 * scale;
+    const availableWidth = innerWidth - (padding * 2);
+    const availableHeight = innerHeight - (padding * 2);
+    
+    let textX = innerX + padding + availableWidth / 2;
+    let textY = innerY + padding + availableHeight / 2;
     let textAnchor = 'middle';
     let dominantBaseline = 'middle';
 
     if (layer.alignment === 'left') {
-      textX = innerX;
+      textX = innerX + padding;
       textAnchor = 'start';
     } else if (layer.alignment === 'right') {
-      textX = innerX + innerWidth;
+      textX = innerX + padding + availableWidth;
       textAnchor = 'end';
     }
 
     if (layer.verticalAlignment === 'top') {
-      textY = innerY;
+      textY = innerY + padding;
       dominantBaseline = 'text-before-edge';
     } else if (layer.verticalAlignment === 'bottom') {
-      textY = innerY + innerHeight;
+      textY = innerY + padding + availableHeight;
       dominantBaseline = 'text-after-edge';
     }
 

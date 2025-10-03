@@ -29,7 +29,9 @@ src/
 │   ├── GroupManager.tsx # Key group management
 │   ├── Keyboard3D.tsx   # 3D keyboard preview
 │   ├── KeyboardPreview.tsx # 2D keyboard preview with layer preview
-│   ├── KeycapPreview.tsx # Individual keycap component
+│   ├── KeycapPreview.tsx # Individual keycap component (CSS-based)
+│   ├── SVGKeycap.tsx # SVG-based keycap component with L-shape support
+│   ├── SVGKeycapPreview.tsx # SVG keycap preview wrapper
 │   ├── KeyLayerPreview.tsx # Compact layer preview above selected key
 │   ├── LayerEditor.tsx  # Individual layer editing interface
 │   ├── LayerManager.tsx # Multi-layer management interface
@@ -37,7 +39,8 @@ src/
 │   ├── CompactLayoutSelector.tsx # Compact layout dropdown
 │   └── UnifiedSidebar.tsx # Merged sidebar with layout, groups, and layers
 ├── data/
-│   └── layouts.ts       # Keyboard layout definitions
+│   ├── layouts.ts       # Keyboard layout definitions
+│   └── 60-iso.svg       # Reference SVG for 60% ISO layout
 ├── hooks/
 │   ├── useKeyboardConfig.ts # Main state management hook
 │   ├── useLayerManagement.ts # Layer management functionality
@@ -166,12 +169,14 @@ interface KeyboardConfig {
 
 ### KeyboardPreview
 - **Purpose**: 2D keyboard visualization with thockfactory-style case and proper centering
-- **Props**: layout, selectedKeys, onKeySelect, onKeyDoubleClick, editingKeyId, currentKeyLayers, selectedLayerId, onLayerSelect, previewKeys, keyRefs
+- **Props**: layout, selectedKeys, onKeySelect, onKeyDoubleClick, editingKeyId, currentKeyLayers, selectedLayerId, onLayerSelect, previewKeys, keyRefs, useSVGKeycaps
 - **Features**: Click selection, double-click editing, visual feedback, realistic keyboard case, center-based scaling
 - **Layout**: Flexbox-based centering with thockfactory-style case design and proper padding
 - **Case Design**: Dark gradient background with realistic shadows and borders
 - **Scaling System**: Center-based scaling with CASE_PADDING for authentic mechanical keyboard appearance
 - **Layer Preview**: Shows compact layer buttons above selected key with theme-consistent styling
+- **SVG Support**: Toggle between CSS-based KeycapPreview and SVG-based SVGKeycapPreview
+- **Positioning**: Absolute positioning for SVG keycaps with proper x/y coordinate mapping
 
 ### Keyboard3D
 - **Purpose**: 3D keyboard visualization using Three.js
@@ -184,6 +189,27 @@ interface KeyboardConfig {
 - **Features**: Multi-layer rendering, legend positioning, font customization, image support, enhanced hover effects
 - **Visual Effects**: Strong hover states, multiselect visibility, ring effects, background highlights
 - **Universal Visibility**: Effects visible on both light and dark keycaps with proper contrast
+
+### SVGKeycap
+- **Purpose**: SVG-based keycap rendering with support for complex shapes like ISO Enter L-shape
+- **Props**: keycap, scale, showBorder, borderColor, className, shape, selected, hovered
+- **Features**: 
+  - **Shape Support**: 'rect' (standard) and 'l-shape' (ISO Enter) rendering modes
+  - **L-Shape Rendering**: Two-rectangle approach for ISO Enter key reverse L-shape
+  - **Text Positioning**: Inner square-based alignment with proper offset handling
+  - **Mirror Support**: Proper transform-origin handling for mirrorX/mirrorY operations
+  - **Hover/Selection Effects**: Color brightness adjustments and border highlighting
+- **Alignment Logic**: Text positioning relative to inner square with padding considerations
+- **Transform Handling**: Center-based transforms for proper mirroring and rotation
+
+### SVGKeycapPreview
+- **Purpose**: Wrapper component for SVGKeycap with hover state management
+- **Props**: keycap, selected, previewSelected, onClick, onDoubleClick, scale
+- **Features**: 
+  - **Auto Shape Detection**: Automatically detects ISO Enter keys for L-shape rendering
+  - **Hover State Management**: Local hover state with mouse enter/leave handlers
+  - **Event Handling**: Click and double-click event propagation
+  - **Positioning**: Absolute positioning within keyboard layout container
 - **Layer Rendering**: Renders all layers with proper positioning, alignment, and styling
 
 ### EnhancedColorPicker
@@ -797,7 +823,36 @@ import { KeyboardLayout } from '@/types/keyboard'
 - **Smooth Animations**: 0.1s ease-out transitions for professional feel
 - **Accessibility**: Keyboard shortcuts for users who prefer keyboard navigation
 
-## Latest Updates - Multiselect FloatingToolbar & UX Enhancements (January 2025)
+## Latest Updates - SVG Keycap System & ISO Layout Implementation (January 2025)
+
+### SVG Keycap System Implementation
+- **Dual Rendering Support**: Toggle between CSS-based KeycapPreview and SVG-based SVGKeycapPreview
+- **L-Shape Support**: Special rendering for ISO Enter key with reverse L-shape using two rectangles
+- **Proper Positioning**: Absolute positioning system for SVG keycaps with accurate x/y coordinate mapping
+- **Hover & Selection Effects**: Color brightness adjustments and border highlighting for SVG keycaps
+- **Mirror Transform Fix**: Center-based transforms for proper mirrorX/mirrorY operations
+- **Text Alignment**: Inner square-based alignment system matching CSS behavior
+
+### ISO 60% Layout Implementation
+- **Pixel-Perfect Matching**: Layout based on exact analysis of 60-iso.svg reference file
+- **ISO Enter Key**: Proper L-shape implementation with 1.46u top width and 1.21u bottom width
+- **Accurate Dimensions**: All keycap sizes and positions calculated from SVG pixel measurements
+- **Right-Edge Alignment**: Consistent alignment across all rows for professional appearance
+- **Space Key**: Corrected to 6.21u width for proper bottom row spacing
+
+### Text Positioning & Alignment Fixes
+- **Vertical Alignment**: Fixed bottom alignment to properly position text at inner square bottom edge
+- **Center Positioning**: Adjusted center alignment with font-size aware offset for better visual balance
+- **Transform Handling**: Proper transform-origin for mirror operations preventing text disappearance
+- **Offset Support**: Position sliders (offsetX/offsetY) now work correctly with SVG rendering
+
+### Component Architecture Updates
+- **SVGKeycap**: New core SVG rendering component with shape support and proper text positioning
+- **SVGKeycapPreview**: Wrapper component with hover state management and auto shape detection
+- **KeyboardPreview**: Updated to support SVG keycap rendering with proper positioning
+- **Layout System**: Enhanced generateISO60Layout with pixel-perfect measurements
+
+## Previous Updates - Multiselect FloatingToolbar & UX Enhancements (January 2025)
 
 ### Multiselect FloatingToolbar Integration
 - **Full Multiselect Support**: All FloatingToolbar features now work with multiple selected keys

@@ -244,7 +244,33 @@ const KeyboardPreview: React.FC<KeyboardPreviewProps> = ({
               };
 
               return useSVGKeycaps ? (
-                <SVGKeycapPreview key={keycap.id} {...commonProps} />
+                <div
+                  key={keycap.id}
+                  ref={(el: HTMLDivElement | null) => {
+                    if (keyRefs) {
+                      keyRefs.current[keycap.id] = el;
+                    }
+                  }}
+                  onClick={(event: React.MouseEvent) => onKeySelect(keycap.id, event)}
+                  onDoubleClick={() => onKeyDoubleClick(keycap.id)}
+                  style={{
+                    position: 'absolute',
+                    left: keycap.x * UNIT * BASE_SCALE,
+                    top: keycap.y * UNIT * BASE_SCALE,
+                    width: keycap.width * UNIT * BASE_SCALE,
+                    height: keycap.height * UNIT * BASE_SCALE,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <SVGKeycapPreview
+                    keycap={keycap}
+                    selected={selectedKeys.includes(keycap.id)}
+                    previewSelected={previewKeys.includes(keycap.id)}
+                    scale={BASE_SCALE}
+                    onClick={(event: React.MouseEvent) => onKeySelect(keycap.id, event)}
+                    onDoubleClick={() => onKeyDoubleClick(keycap.id)}
+                  />
+                </div>
               ) : (
                 <KeycapPreview key={keycap.id} {...commonProps} />
               );

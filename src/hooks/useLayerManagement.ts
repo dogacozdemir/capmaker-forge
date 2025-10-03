@@ -19,7 +19,7 @@ export const useLayerManagement = (
             verticalAlignment: 'center',
             fontSize: 14,
             offsetX: 0,
-            offsetY: 0,
+            offsetY: -4, // Move text to inner square center (4px up from keycap center)
             rotation: 0,
             mirrorX: false,
             mirrorY: false,

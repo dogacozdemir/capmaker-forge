@@ -45,6 +45,9 @@ interface SVGKeycapProps {
   showBorder?: boolean;
   borderColor?: string;
   className?: string;
+  shape?: 'rect' | 'l-shape';
+  selected?: boolean;
+  hovered?: boolean;
 }
 
 const SVGKeycap: React.FC<SVGKeycapProps> = ({
@@ -52,12 +55,15 @@ const SVGKeycap: React.FC<SVGKeycapProps> = ({
   scale = 1,
   showBorder = false,
   borderColor = '#1990ff',
-  className = ''
+  className = '',
+  shape = 'rect',
+  selected = false,
+  hovered = false
 }) => {
   const UNIT = 48 * scale;
   const KEY_SPACING = 4 * scale;
   const BORDER_RADIUS = 2 * scale;
-  const INNER_RADIUS = 3 * scale;
+  const INNER_RADIUS = 3 * scale; // Match CSS version exactly
 
   const width = keycap.width * UNIT - KEY_SPACING;
   const height = keycap.height * UNIT - KEY_SPACING;
@@ -72,41 +78,43 @@ const SVGKeycap: React.FC<SVGKeycapProps> = ({
   const innerHeight = height - innerTop - innerBottom;
 
   // Get base color (darker version)
-  const baseColor = adjustColor(keycap.color || '#ffffff', -20);
-  const mainColor = keycap.color || '#ffffff';
+  let baseColor = adjustColor(keycap.color || '#ffffff', -20);
+  let mainColor = keycap.color || '#ffffff';
+  
+  // Apply hover/selection effects
+  if (selected) {
+    baseColor = adjustColor(baseColor, 10);
+    mainColor = adjustColor(mainColor, 10);
+  } else if (hovered) {
+    baseColor = adjustColor(baseColor, 5);
+    mainColor = adjustColor(mainColor, 5);
+  }
 
   // Convert colors to HSL for better SVG compatibility
   const baseHsl = hexToHsl(baseColor);
   const mainHsl = hexToHsl(mainColor);
 
   const renderLayer = (layer: KeycapLayer, index: number) => {
+    // Calculate center point for proper mirroring
+    const centerX = innerLeft + innerWidth / 2;
+    const centerY = innerTop + innerHeight / 2;
+    
     const transform = `
-      translate(${(layer.offsetX || 0) * scale}, ${(layer.offsetY || 0) * scale})
+      translate(${centerX}, ${centerY})
       rotate(${layer.rotation || 0})
       scale(${layer.mirrorX ? -1 : 1}, ${layer.mirrorY ? -1 : 1})
+      translate(${-centerX}, ${-centerY})
     `;
 
     if (layer.type === 'image' && layer.content && layer.content.trim() !== '') {
       return (
-        <g key={layer.id} transform={transform}>
-          <defs>
-            <clipPath id={`image-clip-${keycap.id}-${index}`}>
-              <rect
-                x={innerLeft}
-                y={innerTop}
-                width={innerWidth}
-                height={innerHeight}
-                rx={INNER_RADIUS}
-              />
-            </clipPath>
-          </defs>
+        <g key={layer.id} transform={transform} clipPath={`url(#text-clip-${keycap.id}-${index})`}>
           <image
             href={layer.content}
             x={innerLeft + innerWidth * 0.1}
             y={innerTop + innerHeight * 0.1}
             width={innerWidth * 0.8}
             height={innerHeight * 0.8}
-            clipPath={`url(#image-clip-${keycap.id}-${index})`}
             preserveAspectRatio="xMidYMid meet"
           />
         </g>
@@ -118,35 +126,43 @@ const SVGKeycap: React.FC<SVGKeycapProps> = ({
     const textColor = layer.color || keycap.textColor || '#ffffff';
     const textHsl = hexToHsl(textColor);
 
-    // Calculate text position based on alignment
-    let textX = width / 2;
-    let textY = height / 2;
+    // Calculate text position using CSS flexbox logic
+    // CSS version uses: inset: 0, padding: 4px, flex center
+    const padding = 4 * scale;
+    const availableWidth = innerWidth - (padding * 2);
+    const availableHeight = innerHeight - (padding * 2);
+    
+    let textX = innerLeft + padding + availableWidth / 2;
+    let textY = innerTop + padding + availableHeight / 2 + fontSize * 0.3; // Biraz aşağı kaydır
     let textAnchor = 'middle';
-    let dominantBaseline = 'central';
+    let dominantBaseline = 'middle';
 
     if (layer.alignment === 'left') {
-      textX = innerLeft + 4 * scale;
+      textX = innerLeft + padding;
       textAnchor = 'start';
     } else if (layer.alignment === 'right') {
-      textX = width - innerRight - 4 * scale;
+      textX = innerLeft + padding + availableWidth;
       textAnchor = 'end';
     }
 
     if (layer.verticalAlignment === 'top') {
-      textY = innerTop + fontSize + 2 * scale;
-      dominantBaseline = 'hanging';
-    } else if (layer.verticalAlignment === 'bottom') {
-      textY = height - innerBottom - 2 * scale;
-      dominantBaseline = 'text-before-edge';
-    }
+      textY = innerTop + padding + fontSize * 0.8; // Font size'a göre ayarla
+      dominantBaseline = 'baseline';
+     } else if (layer.verticalAlignment === 'bottom') {
+       textY = innerTop + innerHeight; // Inner square'ın tam alt kenarı
+       dominantBaseline = 'text-bottom';
+     }
+    
+    
 
     return (
-      <g key={layer.id} transform={transform}>
+      <g key={layer.id} transform={transform} clipPath={`url(#text-clip-${keycap.id}-${index})`}>
         <text
-          x={textX}
-          y={textY}
+          x={textX + (layer.offsetX || 0) * scale}
+          y={textY + (layer.offsetY || 0) * scale}
           fontSize={fontSize}
-          fontFamily={layer.font || 'inherit'}
+          fontFamily={layer.font || 'Arial, sans-serif'}
+          textRendering="geometricPrecision"
           fontWeight={layer.bold ? 'bold' : 'normal'}
           fontStyle={layer.italic ? 'italic' : 'normal'}
           textDecoration={layer.underline ? 'underline' : 'none'}
@@ -160,6 +176,97 @@ const SVGKeycap: React.FC<SVGKeycapProps> = ({
     );
   };
 
+  const renderLShape = () => {
+    // ISO Enter L-shape dimensions based on SVG analysis
+    // Top part: 79px x 52px (1.46u x 1u)
+    // Bottom part: 65.5px x 106px (1.21u x 2u)
+    const topWidth = 79 * scale;
+    const topHeight = 52 * scale;
+    const bottomWidth = 65.5 * scale;
+    const bottomHeight = 106 * scale;
+    
+    const topLeft = 0;
+    const topTop = 0;
+    const bottomLeft = 13.5 * scale; // Offset for bottom part
+    const bottomTop = 0;
+
+    return (
+      <>
+        {/* Top part - darker base */}
+        <rect
+          x={topLeft}
+          y={topTop}
+          width={topWidth}
+          height={topHeight}
+          rx={BORDER_RADIUS}
+          fill={baseColor}
+          stroke="rgba(0, 0, 0, 0.15)"
+          strokeWidth="1"
+        />
+        
+        {/* Bottom part - darker base */}
+        <rect
+          x={bottomLeft}
+          y={bottomTop}
+          width={bottomWidth}
+          height={bottomHeight}
+          rx={BORDER_RADIUS}
+          fill={baseColor}
+          stroke="rgba(0, 0, 0, 0.15)"
+          strokeWidth="1"
+        />
+
+        {/* Top part - main color */}
+        <rect
+          x={topLeft + innerLeft}
+          y={topTop + innerTop}
+          width={topWidth - innerLeft - innerRight}
+          height={topHeight - innerTop - innerBottom}
+          rx={INNER_RADIUS}
+          fill={mainColor}
+        />
+        
+        {/* Bottom part - main color */}
+        <rect
+          x={bottomLeft + innerLeft}
+          y={bottomTop + innerTop}
+          width={bottomWidth - innerLeft - innerRight}
+          height={bottomHeight - innerTop - innerBottom}
+          rx={INNER_RADIUS}
+          fill={mainColor}
+        />
+
+        {/* Border ring if selected */}
+        {(showBorder || selected) && (
+          <>
+            <rect
+              x={topLeft - 2}
+              y={topTop - 2}
+              width={topWidth + 4}
+              height={topHeight + 4}
+              rx={BORDER_RADIUS + 2}
+              fill="none"
+              stroke={borderColor}
+              strokeWidth="2"
+              strokeOpacity="0.5"
+            />
+            <rect
+              x={bottomLeft - 2}
+              y={bottomTop - 2}
+              width={bottomWidth + 4}
+              height={bottomHeight + 4}
+              rx={BORDER_RADIUS + 2}
+              fill="none"
+              stroke={borderColor}
+              strokeWidth="2"
+              strokeOpacity="0.5"
+            />
+          </>
+        )}
+      </>
+    );
+  };
+
   return (
     <svg
       width={width}
@@ -169,62 +276,62 @@ const SVGKeycap: React.FC<SVGKeycapProps> = ({
       style={{ borderRadius: BORDER_RADIUS }}
     >
       <defs>
-        {/* Gradient for base layer */}
-        <linearGradient id={`base-gradient-${keycap.id}`} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor={`hsl(${baseHsl.h}, ${baseHsl.s}%, ${baseHsl.l + 5}%)`} />
-          <stop offset="50%" stopColor={`hsl(${baseHsl.h}, ${baseHsl.s}%, ${baseHsl.l}%)`} />
-          <stop offset="100%" stopColor={`hsl(${baseHsl.h}, ${baseHsl.s}%, ${baseHsl.l - 5}%)`} />
-        </linearGradient>
-
-        {/* Gradient for main layer */}
-        <linearGradient id={`main-gradient-${keycap.id}`} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor={`hsl(${mainHsl.h}, ${mainHsl.s}%, ${mainHsl.l + 3}%)`} />
-          <stop offset="50%" stopColor={`hsl(${mainHsl.h}, ${mainHsl.s}%, ${mainHsl.l}%)`} />
-          <stop offset="100%" stopColor={`hsl(${mainHsl.h}, ${mainHsl.s}%, ${mainHsl.l - 3}%)`} />
-        </linearGradient>
-
-        {/* Shadow filter */}
-        <filter id={`shadow-${keycap.id}`} x="-50%" y="-50%" width="200%" height="200%">
-          <feDropShadow dx="0" dy="1" stdDeviation="1" floodColor="rgba(0,0,0,0.3)" />
-        </filter>
+        {/* Clipping paths for text and images */}
+        {keycap.layers?.map((layer, index) => (
+          <clipPath key={`text-clip-${index}`} id={`text-clip-${keycap.id}-${index}`}>
+            <rect
+              x={innerLeft}
+              y={innerTop}
+              width={innerWidth}
+              height={innerHeight}
+              rx={INNER_RADIUS}
+            />
+          </clipPath>
+        ))}
       </defs>
 
-      {/* Base layer - darker version */}
-      <rect
-        x="0"
-        y="0"
-        width={width}
-        height={height}
-        rx={BORDER_RADIUS}
-        fill={`url(#base-gradient-${keycap.id})`}
-        stroke="rgba(0, 0, 0, 0.15)"
-        strokeWidth="1"
-        filter={`url(#shadow-${keycap.id})`}
-      />
+      {/* Render based on shape */}
+      {shape === 'l-shape' ? (
+        renderLShape()
+      ) : (
+        <>
+          {/* Base layer - darker version (matching CSS exactly) */}
+          <rect
+            x="0"
+            y="0"
+            width={width}
+            height={height}
+            rx={BORDER_RADIUS}
+            fill={baseColor}
+            stroke="rgba(0, 0, 0, 0.15)"
+            strokeWidth="1"
+          />
 
-      {/* Inner square - main keycap color */}
-      <rect
-        x={innerLeft}
-        y={innerTop}
-        width={innerWidth}
-        height={innerHeight}
-        rx={INNER_RADIUS}
-        fill={`url(#main-gradient-${keycap.id})`}
-      />
+          {/* Inner square - main keycap color (matching CSS exactly) */}
+          <rect
+            x={innerLeft}
+            y={innerTop}
+            width={innerWidth}
+            height={innerHeight}
+            rx={INNER_RADIUS}
+            fill={mainColor}
+          />
 
-      {/* Border ring if selected */}
-      {showBorder && (
-        <rect
-          x="-2"
-          y="-2"
-          width={width + 4}
-          height={height + 4}
-          rx={BORDER_RADIUS + 2}
-          fill="none"
-          stroke={borderColor}
-          strokeWidth="2"
-          strokeOpacity="0.5"
-        />
+          {/* Border ring if selected */}
+          {(showBorder || selected) && (
+            <rect
+              x="-2"
+              y="-2"
+              width={width + 4}
+              height={height + 4}
+              rx={BORDER_RADIUS + 2}
+              fill="none"
+              stroke={borderColor}
+              strokeWidth="2"
+              strokeOpacity="0.5"
+            />
+          )}
+        </>
       )}
 
       {/* Content layers */}
