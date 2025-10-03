@@ -14,6 +14,7 @@ export const useKeyboardConfig = () => {
     groups: {},
     allLayouts: {
       '60%': keyboardLayouts['60%'],
+      'ISO-60%': keyboardLayouts['ISO-60%'],
       'TKL': keyboardLayouts['TKL'],
       'Full': keyboardLayouts['Full'],
     },

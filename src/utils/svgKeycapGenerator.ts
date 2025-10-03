@@ -120,15 +120,15 @@ export function generateSVGKeycap(
     const textColor = layer.color || keycap.textColor || '#ffffff';
     const textHsl = hexToHsl(textColor);
 
-    // Calculate text position based on alignment within inner area
+    // Calculate text position based on alignment within inner area (the pressable top surface)
     const legendX = keycapShape.legendArea.x * scale;
     const legendY = keycapShape.legendArea.y * scale;
     const legendWidth = keycapShape.legendArea.width * scale;
     const legendHeight = keycapShape.legendArea.height * scale;
     
-    // Use smaller, more precise padding for better alignment
-    const horizontalPadding = Math.max(2 * scale, legendWidth * 0.02); // 2% of width or 2px minimum
-    const verticalPadding = Math.max(1 * scale, legendHeight * 0.02); // 2% of height or 1px minimum
+    // Use appropriate padding based on keycap size - more padding for larger keys
+    const horizontalPadding = Math.max(3 * scale, legendWidth * 0.05); // 5% of width or 3px minimum
+    const verticalPadding = Math.max(2 * scale, legendHeight * 0.05); // 5% of height or 2px minimum
     
     let textX = legendX + legendWidth / 2;
     let textY = legendY + legendHeight / 2;
