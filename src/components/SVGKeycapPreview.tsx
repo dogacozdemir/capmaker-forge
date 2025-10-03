@@ -110,35 +110,35 @@ const SVGKeycapPreview = forwardRef<HTMLDivElement, SVGKeycapPreviewProps>(
       const textColor = layer.color || keycap.textColor || '#ffffff';
       const textHsl = hexToHsl(textColor);
 
-      // Calculate text position based on alignment within inner area (the pressable top surface)
-      const legendX = keycapShape.legendArea.x * scale;
-      const legendY = keycapShape.legendArea.y * scale;
-      const legendWidth = keycapShape.legendArea.width * scale;
-      const legendHeight = keycapShape.legendArea.height * scale;
+      // Calculate text position based on alignment within innerSquare bounds
+      const innerX = keycapShape.legendArea.x * scale;
+      const innerY = keycapShape.legendArea.y * scale;
+      const innerWidth = keycapShape.legendArea.width * scale;
+      const innerHeight = keycapShape.legendArea.height * scale;
       
-      // Use appropriate padding based on keycap size - more padding for larger keys
-      const horizontalPadding = Math.max(3 * scale, legendWidth * 0.05); // 5% of width or 3px minimum
-      const verticalPadding = Math.max(2 * scale, legendHeight * 0.05); // 5% of height or 2px minimum
+      // Padding within the inner rectangle
+      const horizontalPadding = 4 * scale;
+      const verticalPadding = 4 * scale;
       
-      let textX = legendX + legendWidth / 2;
-      let textY = legendY + legendHeight / 2;
+      let textX = innerX + innerWidth / 2;
+      let textY = innerY + innerHeight / 2;
       let textAnchor = 'middle';
-      let dominantBaseline = 'central';
+      let dominantBaseline = 'middle';
 
       if (layer.alignment === 'left') {
-        textX = legendX + horizontalPadding;
+        textX = innerX + horizontalPadding;
         textAnchor = 'start';
       } else if (layer.alignment === 'right') {
-        textX = legendX + legendWidth - horizontalPadding;
+        textX = innerX + innerWidth - horizontalPadding;
         textAnchor = 'end';
       }
 
       if (layer.verticalAlignment === 'top') {
-        textY = legendY + verticalPadding + fontSize * 0.8; // Adjust for font baseline
+        textY = innerY + verticalPadding;
         dominantBaseline = 'hanging';
       } else if (layer.verticalAlignment === 'bottom') {
-        textY = legendY + legendHeight - verticalPadding;
-        dominantBaseline = 'text-after-edge';
+        textY = innerY + innerHeight - verticalPadding;
+        dominantBaseline = 'auto';
       }
 
       return (
