@@ -120,34 +120,31 @@ export function generateSVGKeycap(
     const textColor = layer.color || keycap.textColor || '#ffffff';
     const textHsl = hexToHsl(textColor);
 
-    // Calculate text position based on alignment within innerSquare bounds
+    // Calculate text position based on alignment within innerSquare bounds (1:1 match)
     const innerX = keycapShape.legendArea.x * scale;
     const innerY = keycapShape.legendArea.y * scale;
     const innerWidth = keycapShape.legendArea.width * scale;
     const innerHeight = keycapShape.legendArea.height * scale;
     
-    // Padding within the inner rectangle
-    const horizontalPadding = 4 * scale;
-    const verticalPadding = 4 * scale;
-    
+    // No padding - use full innerSquare area
     let textX = innerX + innerWidth / 2;
     let textY = innerY + innerHeight / 2;
     let textAnchor = 'middle';
     let dominantBaseline = 'middle';
 
     if (layer.alignment === 'left') {
-      textX = innerX + horizontalPadding;
+      textX = innerX;
       textAnchor = 'start';
     } else if (layer.alignment === 'right') {
-      textX = innerX + innerWidth - horizontalPadding;
+      textX = innerX + innerWidth;
       textAnchor = 'end';
     }
 
     if (layer.verticalAlignment === 'top') {
-      textY = innerY + verticalPadding;
+      textY = innerY;
       dominantBaseline = 'hanging';
     } else if (layer.verticalAlignment === 'bottom') {
-      textY = innerY + innerHeight - verticalPadding;
+      textY = innerY + innerHeight;
       dominantBaseline = 'auto';
     }
 
