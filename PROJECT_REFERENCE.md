@@ -221,9 +221,11 @@ interface KeyboardConfig {
   - **Z-Index Management**: Proper layering with background behind UI, above keycaps
 
 ### FloatingToolbar
-- **Purpose**: Compact, centered toolbar for layer editing with multi-layer support
+- **Purpose**: Compact, centered toolbar for layer editing with multi-layer and multiselect support
 - **Features**:
   - **Layer-Based Editing**: Works with selected layer instead of key properties
+  - **Multiselect Support**: All features work with multiple selected keys simultaneously
+  - **Smart Layer Management**: Multiselect operations apply to first layer of each key
   - **Always Visible**: Remains visible regardless of key selection state
   - **Content-Based Width**: Uses `w-fit` to size toolbar based on content, not full width
   - **Centered Layout**: Horizontally centered with `mx-auto` for optimal positioning
@@ -231,12 +233,14 @@ interface KeyboardConfig {
   - **Aligning, Positioning & Sizing**: Alignment controls, transform tools, individual sliders
   - **Text Section**: Font selection, text styling (B/I/U), size control, text/image mode toggle
   - **Pop-up Panels**: Individual sliders for X/Y position, rotation, font size
+  - **Click-Outside Functionality**: All dropdowns close when clicking outside toolbar
+  - **Exclusive Dropdowns**: Only one dropdown open at a time for cleaner interface
   - **Compact Design**: Minimal spacing with `gap-1` between sections, `flex-shrink-0` to prevent stretching
   - **Responsive Sizing**: Smaller buttons and icons on mobile (`h-5 w-5`), larger on desktop (`sm:h-6 sm:w-6`)
   - **Minimal Separators**: Reduced height separators (`h-4`) for tighter layout
   - **Theme Integration**: Matches dark tech aesthetic with proper color tokens
   - **Layer Integration**: Updates layer properties instead of key properties
-  - **Safe Guards**: All handlers check for key and layer selection before executing
+  - **Visual Indicators**: Shows "Multi-Select (X) - First Layer" for multiselect operations
 
 ### UnifiedSidebar
 - **Purpose**: Merged sidebar containing layout selection, group management, and layer management
@@ -264,15 +268,19 @@ interface KeyboardConfig {
 - **Features**: Create groups, load selections, delete groups
 
 ### KeyLayerPreview
-- **Purpose**: Compact layer preview above selected key
-- **Props**: layers, selectedLayerId, onLayerSelect, keyPosition, unit, padding
+- **Purpose**: Compact layer preview above selected key with layer creation functionality
+- **Props**: layers, selectedLayerId, onLayerSelect, onClose, onAddTextLayer, onAddImageLayer, keyPosition, unit, padding
 - **Features**: 
   - **Compact Design**: Only shows layer content without descriptive text
   - **Theme Integration**: Matches dark tech aesthetic with card/primary colors
   - **Interactive Selection**: Click to select different layers
-  - **Positioned Above Key**: Appears 60px above selected key to avoid blocking
+  - **Closer Positioning**: Appears 35px above selected key for better visual connection
   - **Opacity & Blur**: Semi-transparent with backdrop blur for modern glass effect
   - **Circular Buttons**: Each layer as circular button with proper hover states
+  - **Add Layer Button**: "+" button with theme-consistent design for layer creation
+  - **Layer Creation Menu**: Dropdown with Text and Image layer creation options
+  - **Click-Outside**: Closes when clicking outside preview or add menu
+  - **Auto-Close**: Automatically closes when no keys are selected
 
 ### LayerManager
 - **Purpose**: Multi-layer management interface
@@ -625,7 +633,7 @@ import { KeyboardLayout } from '@/types/keyboard'
 
 ---
 
-*This reference document should be updated as the project evolves. Last updated: January 2025 - Keyboard Centering & Visual Enhancements*
+*This reference document should be updated as the project evolves. Last updated: January 2025 - Multiselect FloatingToolbar & UX Enhancements*
 
 ## Recent Updates - Multi-Layer System & UI Improvements (January 2025)
 
@@ -788,3 +796,42 @@ import { KeyboardLayout } from '@/types/keyboard'
 - **Conflict Resolution**: No interference between drag selection and panning
 - **Smooth Animations**: 0.1s ease-out transitions for professional feel
 - **Accessibility**: Keyboard shortcuts for users who prefer keyboard navigation
+
+## Latest Updates - Multiselect FloatingToolbar & UX Enhancements (January 2025)
+
+### Multiselect FloatingToolbar Integration
+- **Full Multiselect Support**: All FloatingToolbar features now work with multiple selected keys
+- **Smart Layer Management**: Multiselect operations apply to the first layer of each selected key
+- **Visual Indicators**: "Multi-Select (X) - First Layer" label shows multiselect status
+- **Consistent Interface**: Toolbar remains visible and functional regardless of selection state
+- **Layer Operations**: Alignment, positioning, rotation, mirror effects work on multiple keys
+- **Content Management**: Text input and image upload apply to all selected keys simultaneously
+
+### FloatingToolbar Dropdown Improvements
+- **Click-Outside Functionality**: All dropdowns close when clicking outside the toolbar
+- **Exclusive Opening**: Only one dropdown can be open at a time for cleaner interface
+- **Smart Toggle**: Clicking the same button toggles the dropdown, clicking others switches focus
+- **Comprehensive State Management**: All dropdown states properly synchronized
+- **Performance Optimized**: Efficient event listeners with proper cleanup
+
+### KeyLayerPreview Enhancements
+- **Closer Positioning**: Moved from 60px to 35px above selected keycap for better visual connection
+- **Add Layer Button**: New "+" button with theme-consistent design
+- **Layer Creation Menu**: Dropdown with Text and Image layer creation options
+- **Auto-Close Behavior**: Preview closes when no keys are selected for cleaner state management
+- **Enhanced UX**: Click-outside functionality for both preview and add menu
+- **Integrated Workflow**: Direct layer creation from keycap preview
+
+### Component Architecture Updates
+- **FloatingToolbar**: Enhanced with multiselect support and improved dropdown management
+- **KeyLayerPreview**: Added layer creation functionality with theme-consistent design
+- **KeyboardPreview**: Updated to pass layer creation callbacks
+- **Index.tsx**: Integrated multiselect layer operations and auto-layer cleanup
+- **Props Flow**: Comprehensive prop passing for layer management across components
+
+### User Experience Improvements
+- **Seamless Multiselect**: All toolbar features work consistently across single and multiple selections
+- **Intuitive Layer Creation**: Direct layer creation from keycap preview without sidebar navigation
+- **Clean Interface**: Dropdowns close appropriately, no UI clutter
+- **Consistent Behavior**: Same interaction patterns across all components
+- **Performance**: Optimized event handling and state management

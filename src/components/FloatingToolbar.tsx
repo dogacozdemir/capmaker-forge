@@ -36,9 +36,11 @@ interface FloatingToolbarProps {
   onTextColorChange: (color: string) => void;
   selectedKeysCount: number;
   editingKey: any;
+  selectedKeys: any[];
   selectedLayer: KeycapLayer | null;
   onLayerUpdate: (keyId: string, layerId: string, updates: Partial<KeycapLayer>) => void;
   onLegendChange: (keyId: string, layerId: string, content: string) => void;
+  onMultiLayerUpdate: (keyIds: string[], layerId: string, updates: Partial<KeycapLayer>) => void;
 }
 
 const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
@@ -48,9 +50,11 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
   onTextColorChange,
   selectedKeysCount,
   editingKey,
+  selectedKeys,
   selectedLayer,
   onLayerUpdate,
   onLegendChange,
+  onMultiLayerUpdate,
 }) => {
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showTextInput, setShowTextInput] = useState(false);
@@ -59,6 +63,9 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
   const [showYSlider, setShowYSlider] = useState(false);
   const [showRotSlider, setShowRotSlider] = useState(false);
   const [showSizeSlider, setShowSizeSlider] = useState(false);
+  
+  // Refs for click outside detection
+  const toolbarRef = useRef<HTMLDivElement>(null);
   
   // Local state for sliders to prevent re-renders during dragging
   const [localPositionX, setLocalPositionX] = useState([0]);
@@ -75,6 +82,26 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
       setLocalFontSize([selectedLayer.fontSize || 14]);
     }
   }, [selectedLayer]);
+
+  // Click outside to close dropdowns
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (toolbarRef.current && !toolbarRef.current.contains(event.target as Node)) {
+        setShowColorPicker(false);
+        setShowTextInput(false);
+        setShowImageUpload(false);
+        setShowXSlider(false);
+        setShowYSlider(false);
+        setShowRotSlider(false);
+        setShowSizeSlider(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const fonts = [
     'Arial',
@@ -95,6 +122,36 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
     '#000000', '#FFFFFF', '#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF',
     '#808080', '#800000', '#008000', '#000080', '#808000', '#800080', '#008080', '#C0C0C0'
   ];
+
+  // Helper function to determine if we're in multiselect mode
+  const isMultiselect = selectedKeysCount > 1;
+  
+  // Helper function to get the target keys for operations
+  const getTargetKeys = () => {
+    if (isMultiselect) {
+      return selectedKeys;
+    }
+    return editingKey ? [editingKey] : [];
+  };
+  
+  // Helper function to apply updates to multiple keys
+  const applyToMultipleKeys = (updates: Partial<KeycapLayer>) => {
+    const targetKeys = getTargetKeys();
+    if (targetKeys.length === 0) return;
+    
+    if (isMultiselect) {
+      // For multiselect, apply to the first layer of each key that has layers
+      targetKeys.forEach(key => {
+        const layers = key.layers || [];
+        if (layers.length > 0) {
+          // Use the first layer of each key for multiselect operations
+          onMultiLayerUpdate([key.id], layers[0].id, updates);
+        }
+      });
+    } else if (editingKey && selectedLayer) {
+      onLayerUpdate(editingKey.id, selectedLayer.id, updates);
+    }
+  };
 
 
   // Debounced update to parent component
@@ -131,84 +188,67 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
   }, [onColorChange]);
 
   const handleAlignmentChange = useCallback((alignment: 'left' | 'center' | 'right') => {
-    if (editingKey && selectedLayer && onLayerUpdate) {
-      onLayerUpdate(editingKey.id, selectedLayer.id, { alignment });
-    }
-  }, [editingKey, selectedLayer, onLayerUpdate]);
+    applyToMultipleKeys({ alignment });
+  }, [applyToMultipleKeys]);
 
   const handleVerticalAlignmentChange = useCallback((alignment: 'top' | 'center' | 'bottom') => {
-    if (editingKey && selectedLayer && onLayerUpdate) {
-      onLayerUpdate(editingKey.id, selectedLayer.id, { verticalAlignment: alignment });
-    }
-  }, [editingKey, selectedLayer, onLayerUpdate]);
+    applyToMultipleKeys({ verticalAlignment: alignment });
+  }, [applyToMultipleKeys]);
 
   const handleMirrorChange = useCallback((axis: 'X' | 'Y', value: boolean) => {
-    if (editingKey && selectedLayer && onLayerUpdate) {
-      onLayerUpdate(editingKey.id, selectedLayer.id, { [`mirror${axis}`]: value });
-    }
-  }, [editingKey, selectedLayer, onLayerUpdate]);
+    applyToMultipleKeys({ [`mirror${axis}`]: value });
+  }, [applyToMultipleKeys]);
 
   const handleFontChange = useCallback((font: string) => {
-    if (editingKey && selectedLayer && onLayerUpdate) {
-      onLayerUpdate(editingKey.id, selectedLayer.id, { font });
-    }
-  }, [editingKey, selectedLayer, onLayerUpdate]);
+    applyToMultipleKeys({ font });
+  }, [applyToMultipleKeys]);
 
   const handlePositionXChange = useCallback((value: number[]) => {
     setLocalPositionX(value);
-    if (editingKey && selectedLayer && onLayerUpdate) {
-      onLayerUpdate(editingKey.id, selectedLayer.id, { offsetX: value[0] });
-    }
-  }, [editingKey, selectedLayer, onLayerUpdate]);
+    applyToMultipleKeys({ offsetX: value[0] });
+  }, [applyToMultipleKeys]);
 
   const handlePositionYChange = useCallback((value: number[]) => {
     setLocalPositionY(value);
-    if (editingKey && selectedLayer && onLayerUpdate) {
-      onLayerUpdate(editingKey.id, selectedLayer.id, { offsetY: value[0] });
-    }
-  }, [editingKey, selectedLayer, onLayerUpdate]);
+    applyToMultipleKeys({ offsetY: value[0] });
+  }, [applyToMultipleKeys]);
 
   const handleRotationChange = useCallback((value: number[]) => {
     setLocalRotation(value);
-    if (editingKey && selectedLayer && onLayerUpdate) {
-      onLayerUpdate(editingKey.id, selectedLayer.id, { rotation: value[0] });
-    }
-  }, [editingKey, selectedLayer, onLayerUpdate]);
+    applyToMultipleKeys({ rotation: value[0] });
+  }, [applyToMultipleKeys]);
 
   const handleFontSizeChange = useCallback((value: number[]) => {
     setLocalFontSize(value);
   }, []);
 
   const handleTextStyleChange = useCallback((style: 'bold' | 'italic' | 'underline') => {
-    if (editingKey && selectedLayer && onLayerUpdate) {
-      const currentStyle = selectedLayer[style] || false;
-      onLayerUpdate(editingKey.id, selectedLayer.id, { 
-        [style]: !currentStyle 
-      });
-    }
-  }, [editingKey, selectedLayer, onLayerUpdate]);
+    const currentStyle = selectedLayer?.[style] || false;
+    applyToMultipleKeys({ [style]: !currentStyle });
+  }, [applyToMultipleKeys, selectedLayer]);
 
   const handleImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && editingKey && selectedLayer && onLayerUpdate) {
+    if (file) {
       const reader = new FileReader();
       reader.onload = (event) => {
         if (event.target?.result) {
-          onLayerUpdate(editingKey.id, selectedLayer.id, { 
+          const updates = { 
             content: event.target.result as string,
-            type: 'image'
-          });
+            type: 'image' as const
+          };
+          applyToMultipleKeys(updates);
         }
       };
       reader.readAsDataURL(file);
     }
-  }, [editingKey, selectedLayer, onLayerUpdate]);
+  }, [applyToMultipleKeys]);
 
   // Show toolbar even when no key is selected (for layout changes, etc.)
-  // if (!editingKey) return null;
+  // if (selectedKeysCount === 0) return null;
 
   return (
-    <div className="w-fit mx-auto">
+    <div className="w-fit mx-auto" ref={toolbarRef}>
       <div className="bg-card border border-border rounded-lg shadow-elevated p-1.5 sm:p-2">
         {/* Main Toolbar Row - Responsive Layout */}
         <div className="flex items-center justify-start gap-1 flex-wrap sm:flex-nowrap">
@@ -220,7 +260,15 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setShowColorPicker(!showColorPicker)}
+                onClick={() => {
+                  setShowColorPicker(!showColorPicker);
+                  setShowTextInput(false);
+                  setShowImageUpload(false);
+                  setShowXSlider(false);
+                  setShowYSlider(false);
+                  setShowRotSlider(false);
+                  setShowSizeSlider(false);
+                }}
                 className="h-6 w-6 sm:h-7 sm:w-7 p-0 border-border hover:bg-muted"
               >
                 <Palette className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-foreground" />
@@ -305,7 +353,9 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
 
           {/* Aligning, Positioning & Sizing Section */}
           <div className="flex flex-col items-center gap-1 relative flex-shrink-0">
-            <Label className="text-xs font-medium text-foreground hidden sm:block">Align & Position</Label>
+            <Label className="text-xs font-medium text-foreground hidden sm:block">
+              {isMultiselect ? `Multi-Select (${selectedKeysCount}) - First Layer` : 'Align & Position'}
+            </Label>
             <div className="flex gap-0.5 flex-wrap sm:flex-nowrap">
               {/* Horizontal Alignment */}
               {(['left', 'center', 'right'] as const).map((align) => (
@@ -371,6 +421,10 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
                   setShowXSlider(!showXSlider);
                   setShowYSlider(false);
                   setShowRotSlider(false);
+                  setShowColorPicker(false);
+                  setShowTextInput(false);
+                  setShowImageUpload(false);
+                  setShowSizeSlider(false);
                 }}
                 className="h-5 w-5 sm:h-6 sm:w-6 p-0 border-border hover:bg-muted"
               >
@@ -383,6 +437,10 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
                   setShowYSlider(!showYSlider);
                   setShowXSlider(false);
                   setShowRotSlider(false);
+                  setShowColorPicker(false);
+                  setShowTextInput(false);
+                  setShowImageUpload(false);
+                  setShowSizeSlider(false);
                 }}
                 className="h-5 w-5 sm:h-6 sm:w-6 p-0 border-border hover:bg-muted"
               >
@@ -395,6 +453,10 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
                   setShowRotSlider(!showRotSlider);
                   setShowXSlider(false);
                   setShowYSlider(false);
+                  setShowColorPicker(false);
+                  setShowTextInput(false);
+                  setShowImageUpload(false);
+                  setShowSizeSlider(false);
                 }}
                 className="h-5 w-5 sm:h-6 sm:w-6 p-0 border-border hover:bg-muted"
               >
@@ -457,8 +519,8 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
           <div className="h-4 w-px bg-border" />
 
           {/* Text Section */}
-          <div className="flex flex-col items-center gap-1 relative flex-shrink-0">
-            <Label className="text-xs font-medium text-foreground hidden sm:block">Text</Label>
+            <div className="flex flex-col items-center gap-1 relative flex-shrink-0">
+              <Label className="text-xs font-medium text-foreground hidden sm:block">Text</Label>
             <div className="flex flex-col gap-1">
               {/* Main Controls Row */}
               <div className="flex gap-0.5 items-center flex-wrap sm:flex-nowrap">
@@ -510,6 +572,10 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
                     setShowSizeSlider(!showSizeSlider);
                     setShowTextInput(false);
                     setShowImageUpload(false);
+                    setShowColorPicker(false);
+                    setShowXSlider(false);
+                    setShowYSlider(false);
+                    setShowRotSlider(false);
                   }}
                   className="h-5 w-5 sm:h-6 sm:w-6 p-0 border-border hover:bg-muted"
                 >
@@ -521,12 +587,14 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
                   variant={selectedLayer?.type !== 'image' ? "default" : "outline"}
                   size="sm"
                   onClick={() => {
-                    if (editingKey && selectedLayer && onLayerUpdate) {
-                      onLayerUpdate(editingKey.id, selectedLayer.id, { type: 'text' });
-                    }
+                    applyToMultipleKeys({ type: 'text' });
                     setShowTextInput(!showTextInput);
                     setShowImageUpload(false);
                     setShowSizeSlider(false);
+                    setShowColorPicker(false);
+                    setShowXSlider(false);
+                    setShowYSlider(false);
+                    setShowRotSlider(false);
                   }}
                   className="h-5 w-5 sm:h-6 sm:w-6 p-0 border-border hover:bg-muted"
                 >
@@ -542,6 +610,10 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
                     setShowImageUpload(!showImageUpload);
                     setShowTextInput(false);
                     setShowSizeSlider(false);
+                    setShowColorPicker(false);
+                    setShowXSlider(false);
+                    setShowYSlider(false);
+                    setShowRotSlider(false);
                   }}
                   className="h-5 w-5 sm:h-6 sm:w-6 p-0 border-border hover:bg-muted"
                 >
@@ -556,8 +628,23 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
                     <Label className="text-xs font-medium text-foreground">Text Input</Label>
                     <Input
                       value={selectedLayer?.content || ''}
-                      onChange={(e) => editingKey && selectedLayer && onLegendChange(editingKey.id, selectedLayer.id, e.target.value)}
-                      placeholder="Enter key text..."
+                      onChange={(e) => {
+                        const targetKeys = getTargetKeys();
+                        if (targetKeys.length > 0) {
+                          if (isMultiselect) {
+                            // For multiselect, apply to first layer of each key
+                            targetKeys.forEach(key => {
+                              const layers = key.layers || [];
+                              if (layers.length > 0) {
+                                onLegendChange(key.id, layers[0].id, e.target.value);
+                              }
+                            });
+                          } else if (editingKey && selectedLayer) {
+                            onLegendChange(editingKey.id, selectedLayer.id, e.target.value);
+                          }
+                        }
+                      }}
+                      placeholder={isMultiselect ? "Enter text for all selected keys..." : "Enter key text..."}
                       className="h-6 text-xs border-border bg-background text-foreground"
                       autoFocus
                     />
@@ -606,7 +693,7 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
                 </div>
               )}
             </div>
-          </div>
+            </div>
         </div>
 
       </div>

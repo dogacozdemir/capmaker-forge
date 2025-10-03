@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useKeyboardConfig } from '@/hooks/useKeyboardConfig';
 import { layoutOptions } from '@/data/layouts';
 import UnifiedSidebar from '@/components/UnifiedSidebar';
@@ -8,9 +8,10 @@ import DragSelection from '@/components/DragSelection';
 import FloatingToolbar from '@/components/FloatingToolbar';
 import LayerManager from '@/components/LayerManager';
 import ExportPanel from '@/components/ExportPanel';
-import { Box, Monitor, ShoppingCart, User, Download } from 'lucide-react';
+import { Box, Monitor, ShoppingCart, User, Download, FileImage } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { KeycapLayer } from '@/types/keyboard';
 
 const Index = () => {
   const [view3D, setView3D] = useState(false);
@@ -82,6 +83,13 @@ const Index = () => {
     }
   };
 
+  // Clear layer selection when no keys are selected
+  useEffect(() => {
+    if (config.selectedKeys.length === 0) {
+      selectLayer(null);
+    }
+  }, [config.selectedKeys.length, selectLayer]);
+
   const handleColorChange = (color: string) => {
     if (config.selectedKeys.length > 0) {
       updateKeycapColor(config.selectedKeys, color);
@@ -92,6 +100,12 @@ const Index = () => {
     if (config.selectedKeys.length > 0) {
       updateKeycapTextColor(config.selectedKeys, textColor);
     }
+  };
+
+  const handleMultiLayerUpdate = (keyIds: string[], layerId: string, updates: any) => {
+    keyIds.forEach(keyId => {
+      updateLayer(keyId, layerId, updates);
+    });
   };
 
   const getCurrentColor = () => {
@@ -142,6 +156,15 @@ const Index = () => {
                   <ExportPanel config={config} />
                 </PopoverContent>
               </Popover>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => window.open('/svg-demo', '_blank')}
+                className="h-10 w-10 text-muted-foreground hover:text-foreground hover:bg-muted"
+                title="SVG Keycap Generator"
+              >
+                <FileImage className="h-5 w-5" />
+              </Button>
               <Button
                 variant="ghost"
                 size="icon"
@@ -211,11 +234,13 @@ const Index = () => {
                     onTextColorChange={handleTextColorChange}
                     selectedKeysCount={config.selectedKeys.length}
                     editingKey={editingKey}
+                    selectedKeys={selectedKeys}
                     selectedLayer={selectedLayer}
                     onLayerUpdate={updateLayer}
                     onLegendChange={(keyId, layerId, content) => {
                       updateLayer(keyId, layerId, { content });
                     }}
+                    onMultiLayerUpdate={handleMultiLayerUpdate}
                   />
                 </div>
               </div>
@@ -245,6 +270,12 @@ const Index = () => {
                       currentKeyLayers={currentKeyLayers}
                       selectedLayerId={selectedLayerId}
                       onLayerSelect={handleLayerSelect}
+                      onAddTextLayer={() => {
+                        editingKeyId && addLayer(editingKeyId, 'text');
+                      }}
+                      onAddImageLayer={() => {
+                        editingKeyId && addLayer(editingKeyId, 'image');
+                      }}
                     />
                   </DragSelection>
                 )}

@@ -9,6 +9,12 @@ export const layoutOptions: LayoutOption[] = [
     keyCount: 61,
   },
   {
+    id: 'ISO-60%',
+    name: '60% ISO Layout',
+    description: 'ISO standard 60% layout with UK/European key legends',
+    keyCount: 61,
+  },
+  {
     id: 'TKL',
     name: 'Tenkeyless',
     description: '87 keys - Function keys without numpad',
@@ -58,7 +64,7 @@ const generate60Layout = (): KeyboardLayout => {
   });
 
   // Row 2 (Tab and QWERTY)
-  const row2Keys = ['Tab', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '[', ']', '\\'];
+  const row2Keys = ['Tab', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', 'Ğ', 'Ü', '\\'];
   x = 0;
   row2Keys.forEach((legend, i) => {
     const width = legend === 'Tab' ? 1.5 : legend === '\\' ? 1.5 : 1;
@@ -84,7 +90,7 @@ const generate60Layout = (): KeyboardLayout => {
   });
 
   // Row 3 (Caps Lock and ASDF)
-  const row3Keys = ['Caps', 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ';', "'", 'Enter'];
+  const row3Keys = ['Caps', 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'Ş', "İ", 'Enter'];
   x = 0;
   row3Keys.forEach((legend, i) => {
     const width = legend === 'Caps' ? 1.75 : legend === 'Enter' ? 2.25 : 1;
@@ -110,7 +116,7 @@ const generate60Layout = (): KeyboardLayout => {
   });
 
   // Row 4 (Shift and ZXCV)
-  const row4Keys = ['Shift', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', ',', '.', '/', 'Shift'];
+  const row4Keys = ['Shift', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', 'Ö', 'Ç', ':', 'Shift'];
   x = 0;
   row4Keys.forEach((legend, i) => {
     const width = legend === 'Shift' ? (i === 0 ? 2.25 : 2.75) : 1;
@@ -317,8 +323,222 @@ const generateFullLayout = (): KeyboardLayout => {
   };
 };
 
+// Generate ISO 60% layout based on provided raw data
+const generateISO60Layout = (): KeyboardLayout => {
+  const keys = [];
+  let keyId = 0;
+
+  // Row 1 (Numbers and backspace) - ISO layout
+  const row1Keys = [
+    { legend: '¬\n`', width: 1 },
+    { legend: '!\n1', width: 1 },
+    { legend: '"\n2', width: 1 },
+    { legend: '£\n3', width: 1 },
+    { legend: '$\n4', width: 1 },
+    { legend: '%\n5', width: 1 },
+    { legend: '^\n6', width: 1 },
+    { legend: '&\n7', width: 1 },
+    { legend: '*\n8', width: 1 },
+    { legend: '(\n9', width: 1 },
+    { legend: ')\n0', width: 1 },
+    { legend: '_\n-', width: 1 },
+    { legend: '+\n=', width: 1 },
+    { legend: 'Backspace', width: 2 }
+  ];
+  
+  let x = 0;
+  row1Keys.forEach((key, i) => {
+    keys.push({
+      id: `key-${keyId++}`,
+      row: 0,
+      col: i,
+      width: key.width,
+      height: 1,
+      x,
+      y: 0,
+      color: '#FFFFFF',
+      textColor: '#000000',
+      layers: [{
+        id: `layer-${keyId}-0`,
+        type: 'text',
+        content: key.legend,
+        alignment: 'center',
+        verticalAlignment: 'center',
+      }],
+    });
+    x += key.width;
+  });
+
+  // Row 2 (Tab and QWERTY) - ISO layout
+  const row2Keys = [
+    { legend: 'Tab', width: 1.5 },
+    { legend: 'Q', width: 1 },
+    { legend: 'W', width: 1 },
+    { legend: 'E', width: 1 },
+    { legend: 'R', width: 1 },
+    { legend: 'T', width: 1 },
+    { legend: 'Y', width: 1 },
+    { legend: 'U', width: 1 },
+    { legend: 'I', width: 1 },
+    { legend: 'O', width: 1 },
+    { legend: 'P', width: 1 },
+    { legend: '{\n[', width: 1 },
+    { legend: '}\n]', width: 1 },
+    { legend: 'Enter', width: 1.25, height: 2, xOffset: 0.25, w2: 1.5, h2: 1, x2: -0.25 }
+  ];
+  
+  x = 0;
+  row2Keys.forEach((key, i) => {
+    const isEnter = key.legend === 'Enter';
+    keys.push({
+      id: `key-${keyId++}`,
+      row: 1,
+      col: i,
+      width: key.width,
+      height: isEnter ? key.height : 1,
+      x: x + (isEnter ? key.xOffset : 0),
+      y: 1,
+      color: '#FFFFFF',
+      textColor: '#000000',
+      layers: [{
+        id: `layer-${keyId}-0`,
+        type: 'text',
+        content: key.legend,
+        alignment: 'center',
+        verticalAlignment: 'center',
+      }],
+    });
+    x += key.width;
+  });
+
+  // Row 3 (Caps Lock and ASDF) - ISO layout
+  const row3Keys = [
+    { legend: 'Caps Lock', width: 1.75 },
+    { legend: 'A', width: 1 },
+    { legend: 'S', width: 1 },
+    { legend: 'D', width: 1 },
+    { legend: 'F', width: 1 },
+    { legend: 'G', width: 1 },
+    { legend: 'H', width: 1 },
+    { legend: 'J', width: 1 },
+    { legend: 'K', width: 1 },
+    { legend: 'L', width: 1 },
+    { legend: ':\n;', width: 1 },
+    { legend: '@\n\'', width: 1 },
+    { legend: '~\n#', width: 1 }
+  ];
+  
+  x = 0;
+  row3Keys.forEach((key, i) => {
+    keys.push({
+      id: `key-${keyId++}`,
+      row: 2,
+      col: i,
+      width: key.width,
+      height: 1,
+      x,
+      y: 2,
+      color: '#FFFFFF',
+      textColor: '#000000',
+      layers: [{
+        id: `layer-${keyId}-0`,
+        type: 'text',
+        content: key.legend,
+        alignment: 'center',
+        verticalAlignment: 'center',
+      }],
+    });
+    x += key.width;
+  });
+
+  // Row 4 (Shift and ZXCV) - ISO layout
+  const row4Keys = [
+    { legend: 'Shift', width: 1.25 },
+    { legend: '|\n\\', width: 1 },
+    { legend: 'Z', width: 1 },
+    { legend: 'X', width: 1 },
+    { legend: 'C', width: 1 },
+    { legend: 'V', width: 1 },
+    { legend: 'B', width: 1 },
+    { legend: 'N', width: 1 },
+    { legend: 'M', width: 1 },
+    { legend: '<\n,', width: 1 },
+    { legend: '>\n.', width: 1 },
+    { legend: '?\n/', width: 1 },
+    { legend: 'Shift', width: 2.75 }
+  ];
+  
+  x = 0;
+  row4Keys.forEach((key, i) => {
+    keys.push({
+      id: `key-${keyId++}`,
+      row: 3,
+      col: i,
+      width: key.width,
+      height: 1,
+      x,
+      y: 3,
+      color: '#FFFFFF',
+      textColor: '#000000',
+      layers: [{
+        id: `layer-${keyId}-0`,
+        type: 'text',
+        content: key.legend,
+        alignment: 'center',
+        verticalAlignment: 'center',
+      }],
+    });
+    x += key.width;
+  });
+
+  // Row 5 (Bottom row) - ISO layout
+  const row5Keys = [
+    { legend: 'Ctrl', width: 1.25 },
+    { legend: 'Win', width: 1.25 },
+    { legend: 'Alt', width: 1.25 },
+    { legend: '', width: 6.25, alignment: 7 },
+    { legend: 'AltGr', width: 1.25, alignment: 4 },
+    { legend: 'Win', width: 1.25 },
+    { legend: 'Menu', width: 1.25 },
+    { legend: 'Ctrl', width: 1.25 }
+  ];
+  
+  x = 0;
+  row5Keys.forEach((key, i) => {
+    keys.push({
+      id: `key-${keyId++}`,
+      row: 4,
+      col: i,
+      width: key.width,
+      height: 1,
+      x,
+      y: 4,
+      color: '#FFFFFF',
+      textColor: '#000000',
+      layers: [{
+        id: `layer-${keyId}-0`,
+        type: 'text',
+        content: key.legend,
+        alignment: 'center',
+        verticalAlignment: 'center',
+      }],
+    });
+    x += key.width;
+  });
+
+  return {
+    id: 'ISO-60%',
+    name: '60% ISO Layout',
+    keys,
+    totalKeys: keys.length,
+    width: 15, // Total width of the layout
+    height: 5, // 5 rows
+  };
+};
+
 export const keyboardLayouts: Record<string, KeyboardLayout> = {
   '60%': generate60Layout(),
+  'ISO-60%': generateISO60Layout(),
   'thockfactory-60': thockFactory60Layout,
   'TKL': generateTKLLayout(),
   'Full': generateFullLayout(),

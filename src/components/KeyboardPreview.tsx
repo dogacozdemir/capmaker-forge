@@ -14,6 +14,8 @@ interface KeyboardPreviewProps {
   currentKeyLayers?: KeycapLayer[];
   selectedLayerId?: string | null;
   onLayerSelect?: (layerId: string) => void;
+  onAddTextLayer?: () => void;
+  onAddImageLayer?: () => void;
 }
 
 const KeyboardPreview: React.FC<KeyboardPreviewProps> = ({
@@ -27,6 +29,8 @@ const KeyboardPreview: React.FC<KeyboardPreviewProps> = ({
   currentKeyLayers = [],
   selectedLayerId,
   onLayerSelect,
+  onAddTextLayer,
+  onAddImageLayer,
 }) => {
   const UNIT = 48;
   const BASE_SCALE = 1.1;
@@ -254,6 +258,8 @@ const KeyboardPreview: React.FC<KeyboardPreviewProps> = ({
                     selectedLayerId={selectedLayerId || null}
                     onLayerSelect={onLayerSelect}
                     onClose={() => onLayerSelect && onLayerSelect('')}
+                    onAddTextLayer={onAddTextLayer}
+                    onAddImageLayer={onAddImageLayer}
                     keyPosition={{
                       x: selectedKey.x * UNIT * BASE_SCALE,
                       y: selectedKey.y * UNIT * BASE_SCALE,

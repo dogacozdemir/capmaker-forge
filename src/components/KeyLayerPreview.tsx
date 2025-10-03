@@ -1,11 +1,14 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { KeycapLayer } from '@/types/keyboard';
+import { Plus, Type, Image } from 'lucide-react';
 
 interface KeyLayerPreviewProps {
   layers: KeycapLayer[];
   selectedLayerId: string | null;
   onLayerSelect: (layerId: string) => void;
   onClose?: () => void;
+  onAddTextLayer?: () => void;
+  onAddImageLayer?: () => void;
   keyPosition: { x: number; y: number; width: number; height: number };
   unit: number;
   padding: number;
@@ -16,17 +19,21 @@ const KeyLayerPreview: React.FC<KeyLayerPreviewProps> = ({
   selectedLayerId,
   onLayerSelect,
   onClose,
+  onAddTextLayer,
+  onAddImageLayer,
   keyPosition,
   unit,
   padding,
 }) => {
   const previewRef = useRef<HTMLDivElement>(null);
+  const [showAddMenu, setShowAddMenu] = useState(false);
 
   // Click-outside effect to close
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (previewRef.current && !previewRef.current.contains(event.target as Node)) {
         onClose?.();
+        setShowAddMenu(false);
       }
     };
 
@@ -45,7 +52,7 @@ const KeyLayerPreview: React.FC<KeyLayerPreviewProps> = ({
   // Position relative to key center
   const keyCenterX = keyPosition.x + keyPosition.width / 2;
   const keyCenterY = keyPosition.y + keyPosition.height / 2;
-  const previewY = keyCenterY - 60; // biraz yukarıda olsun
+  const previewY = keyCenterY - 52;
 
   return (
     <div
@@ -94,6 +101,42 @@ const KeyLayerPreview: React.FC<KeyLayerPreviewProps> = ({
             )}
           </button>
         ))}
+        
+        {/* Add Layer Button */}
+        <div className="relative">
+          <button
+            onClick={() => setShowAddMenu(!showAddMenu)}
+            className="w-7 h-7 rounded-full border border-border bg-card text-card-foreground hover:bg-muted hover:border-primary/50 flex items-center justify-center transition-all duration-200 hover:scale-105 hover:shadow-sm"
+          >
+            <Plus className="w-3 h-3" />
+          </button>
+          
+          {/* Add Layer Menu */}
+          {showAddMenu && (
+            <div className="absolute top-full mt-1 left-1/2 transform -translate-x-1/2 bg-card/90 backdrop-blur-sm border border-border rounded-md shadow-elevated p-1 flex gap-1 z-50">
+              <button
+                onClick={() => {
+                  onAddTextLayer?.();
+                  setShowAddMenu(false);
+                }}
+                className="w-6 h-6 rounded border border-border bg-card text-card-foreground hover:bg-muted hover:border-primary/50 flex items-center justify-center transition-all duration-200 hover:scale-105"
+                title="Add Text Layer"
+              >
+                <Type className="w-3 h-3" />
+              </button>
+              <button
+                onClick={() => {
+                  onAddImageLayer?.();
+                  setShowAddMenu(false);
+                }}
+                className="w-6 h-6 rounded border border-border bg-card text-card-foreground hover:bg-muted hover:border-primary/50 flex items-center justify-center transition-all duration-200 hover:scale-105"
+                title="Add Image Layer"
+              >
+                <Image className="w-3 h-3" />
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

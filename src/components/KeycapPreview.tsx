@@ -161,11 +161,11 @@ const KeycapPreview = forwardRef<HTMLDivElement, KeycapPreviewProps>(
         <div
           className="absolute"
           style={{
-            top: 1.5 * scale,        // Yukarı: yakın
+            top: 2 * scale,        // Yukarı: yakın
             left: 6 * scale,       // Sol: uzak
             right: 6 * scale,      // Sağ: uzak
             bottom: 10 * scale,     // Aşağı: çok uzak
-            borderRadius: 6, // İç kare için daha yumuşak köşeler
+            borderRadius: 3, // İç kare için daha yumuşak köşeler
             background: keycap.color || '#ffffff', // Asıl keycap rengi
           }}
         />

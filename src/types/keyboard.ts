@@ -52,7 +52,7 @@ export interface KeyboardConfig {
   currentLayoutType: LayoutType;
 }
 
-export type LayoutType = '60%' | 'TKL' | 'Full';
+export type LayoutType = '60%' | 'ISO-60%' | 'TKL' | 'Full';
 
 export interface LayoutOption {
   id: LayoutType;
