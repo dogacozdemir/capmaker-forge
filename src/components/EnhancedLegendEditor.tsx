@@ -293,8 +293,8 @@ const EnhancedLegendEditor: React.FC<EnhancedLegendEditorProps> = ({
             <Slider
               value={positionX}
               onValueChange={handlePositionXChange}
-              max={10}
-              min={-10}
+              max={300}
+              min={-300}
               step={1}
               className="w-full"
             />
@@ -304,8 +304,8 @@ const EnhancedLegendEditor: React.FC<EnhancedLegendEditorProps> = ({
             <Slider
               value={positionY}
               onValueChange={handlePositionYChange}
-              max={10}
-              min={-10}
+              max={200}
+              min={-200}
               step={1}
               className="w-full"
             />

@@ -132,10 +132,10 @@ const SVGKeycapPreview = forwardRef<HTMLDivElement, SVGKeycapPreviewProps>(
 
       if (layer.verticalAlignment === 'top') {
         textY = innerY;
-        dominantBaseline = 'hanging';
+        dominantBaseline = 'text-before-edge';
       } else if (layer.verticalAlignment === 'bottom') {
         textY = innerY + innerHeight;
-        dominantBaseline = 'auto';
+        dominantBaseline = 'text-after-edge';
       }
 
       return (

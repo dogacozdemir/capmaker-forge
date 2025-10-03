@@ -126,6 +126,12 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
   // Helper function to determine if we're in multiselect mode
   const isMultiselect = selectedKeysCount > 1;
   
+  // Dynamic inner area for sliders based on selected key size (full innerSquare coverage)
+  const unitPx = 48;
+  const targetKeyForBounds = isMultiselect ? selectedKeys?.[0] : editingKey;
+  const innerWidthPx = targetKeyForBounds ? (targetKeyForBounds.width || 1) * unitPx - 12 : unitPx - 12;
+  const innerHeightPx = targetKeyForBounds ? (targetKeyForBounds.height || 1) * unitPx - 12 : unitPx - 12;
+  
   // Helper function to get the target keys for operations
   const getTargetKeys = () => {
     if (isMultiselect) {
@@ -472,8 +478,8 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
                   <Slider
                     value={localPositionX}
                     onValueChange={handlePositionXChange}
-                    max={10}
-                    min={-10}
+                    max={Math.round(innerWidthPx)}
+                    min={-Math.round(innerWidthPx)}
                     step={0.05}
                     className="w-full"
                   />
@@ -489,8 +495,8 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
                   <Slider
                     value={localPositionY}
                     onValueChange={handlePositionYChange}
-                    max={10}
-                    min={-10}
+                    max={Math.round(innerHeightPx)}
+                    min={-Math.round(innerHeightPx)}
                     step={0.05}
                     className="w-full"
                   />
