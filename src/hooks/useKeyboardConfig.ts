@@ -22,6 +22,7 @@ export const useKeyboardConfig = () => {
 
   const [editingKeyId, setEditingKeyId] = useState<string | null>(null);
   const [selectedLayerId, setSelectedLayerId] = useState<string | null>(null);
+  const [useSVGKeycaps, setUseSVGKeycaps] = useState<boolean>(false);
 
   const { addLayer: originalAddLayer, deleteLayer, reorderLayer, updateLayer } = useLayerManagement(config, setConfig);
 
@@ -188,5 +189,8 @@ export const useKeyboardConfig = () => {
     updateLayer,
     getKeyLayers,
     selectLayer,
+    // SVG toggle
+    useSVGKeycaps,
+    setUseSVGKeycaps,
   };
 };

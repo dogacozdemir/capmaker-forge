@@ -1,4 +1,5 @@
 import { KeycapConfig, KeycapLayer } from '@/types/keyboard';
+import { createKeycapShape } from '@/data/svgKeycapShapes';
 
 // Helper function to adjust color brightness
 const adjustColor = (color: string, amount: number): string => {
@@ -80,9 +81,8 @@ export function generateSVGKeycap(
   const baseColor = adjustColor(keycap.color || '#ffffff', -20);
   const mainColor = keycap.color || '#ffffff';
 
-  // Convert colors to HSL for better SVG compatibility
-  const baseHsl = hexToHsl(baseColor);
-  const mainHsl = hexToHsl(mainColor);
+  // Create the keycap shape with colors
+  const keycapShape = createKeycapShape(keycap.width, keycap.height, baseColor, mainColor, keycap.id);
 
   const renderLayer = (layer: KeycapLayer, index: number): string => {
     const transform = `
@@ -92,26 +92,23 @@ export function generateSVGKeycap(
     `;
 
     if (layer.type === 'image' && layer.content && layer.content.trim() !== '') {
+      const legendX = keycapShape.legendArea.x * scale;
+      const legendY = keycapShape.legendArea.y * scale;
+      const legendWidth = keycapShape.legendArea.width * scale;
+      const legendHeight = keycapShape.legendArea.height * scale;
+      
+      // Use proportional padding for images
+      const imagePadding = Math.max(4 * scale, Math.min(legendWidth, legendHeight) * 0.1);
+      
       return `
         <g transform="${transform}">
-          <defs>
-            <clipPath id="image-clip-${keycap.id}-${index}">
-              <rect
-                x="${innerLeft}"
-                y="${innerTop}"
-                width="${innerWidth}"
-                height="${innerHeight}"
-                rx="${INNER_RADIUS}"
-              />
-            </clipPath>
-          </defs>
           <image
             href="${layer.content}"
-            x="${innerLeft + innerWidth * 0.1}"
-            y="${innerTop + innerHeight * 0.1}"
-            width="${innerWidth * 0.8}"
-            height="${innerHeight * 0.8}"
-            clip-path="url(#image-clip-${keycap.id}-${index})"
+            x="${legendX + imagePadding}"
+            y="${legendY + imagePadding}"
+            width="${legendWidth - (imagePadding * 2)}"
+            height="${legendHeight - (imagePadding * 2)}"
+            clip-path="url(#inner-area-clip-${keycap.id})"
             preserveAspectRatio="xMidYMid meet"
           />
         </g>
@@ -123,26 +120,35 @@ export function generateSVGKeycap(
     const textColor = layer.color || keycap.textColor || '#ffffff';
     const textHsl = hexToHsl(textColor);
 
-    // Calculate text position based on alignment
-    let textX = width / 2;
-    let textY = height / 2;
+    // Calculate text position based on alignment within inner area
+    const legendX = keycapShape.legendArea.x * scale;
+    const legendY = keycapShape.legendArea.y * scale;
+    const legendWidth = keycapShape.legendArea.width * scale;
+    const legendHeight = keycapShape.legendArea.height * scale;
+    
+    // Use smaller, more precise padding for better alignment
+    const horizontalPadding = Math.max(2 * scale, legendWidth * 0.02); // 2% of width or 2px minimum
+    const verticalPadding = Math.max(1 * scale, legendHeight * 0.02); // 2% of height or 1px minimum
+    
+    let textX = legendX + legendWidth / 2;
+    let textY = legendY + legendHeight / 2;
     let textAnchor = 'middle';
     let dominantBaseline = 'central';
 
     if (layer.alignment === 'left') {
-      textX = innerLeft + 4 * scale;
+      textX = legendX + horizontalPadding;
       textAnchor = 'start';
     } else if (layer.alignment === 'right') {
-      textX = width - innerRight - 4 * scale;
+      textX = legendX + legendWidth - horizontalPadding;
       textAnchor = 'end';
     }
 
     if (layer.verticalAlignment === 'top') {
-      textY = innerTop + fontSize + 2 * scale;
+      textY = legendY + verticalPadding + fontSize * 0.8; // Adjust for font baseline
       dominantBaseline = 'hanging';
     } else if (layer.verticalAlignment === 'bottom') {
-      textY = height - innerBottom - 2 * scale;
-      dominantBaseline = 'text-before-edge';
+      textY = legendY + legendHeight - verticalPadding;
+      dominantBaseline = 'text-after-edge';
     }
 
     const fontWeight = layer.bold ? 'bold' : 'normal';
@@ -150,7 +156,7 @@ export function generateSVGKeycap(
     const textDecoration = layer.underline ? 'underline' : 'none';
 
     return `
-      <g transform="${transform}">
+      <g transform="${transform}" clip-path="url(#inner-area-clip-${keycap.id})">
         <text
           x="${textX}"
           y="${textY}"
@@ -180,48 +186,22 @@ export function generateSVGKeycap(
       style="border-radius: ${BORDER_RADIUS}px"
     >
       <defs>
-        <!-- Gradient for base layer -->
-        <linearGradient id="base-gradient-${keycap.id}" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="hsl(${baseHsl.h}, ${baseHsl.s}%, ${baseHsl.l + 5}%)" />
-          <stop offset="50%" stop-color="hsl(${baseHsl.h}, ${baseHsl.s}%, ${baseHsl.l}%)" />
-          <stop offset="100%" stop-color="hsl(${baseHsl.h}, ${baseHsl.s}%, ${baseHsl.l - 5}%)" />
-        </linearGradient>
-
-        <!-- Gradient for main layer -->
-        <linearGradient id="main-gradient-${keycap.id}" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="hsl(${mainHsl.h}, ${mainHsl.s}%, ${mainHsl.l + 3}%)" />
-          <stop offset="50%" stop-color="hsl(${mainHsl.h}, ${mainHsl.s}%, ${mainHsl.l}%)" />
-          <stop offset="100%" stop-color="hsl(${mainHsl.h}, ${mainHsl.s}%, ${mainHsl.l - 3}%)" />
-        </linearGradient>
-
-        <!-- Shadow filter -->
-        <filter id="shadow-${keycap.id}" x="-50%" y="-50%" width="200%" height="200%">
-          <feDropShadow dx="0" dy="1" stdDeviation="1" flood-color="rgba(0,0,0,0.3)" />
-        </filter>
+        <!-- Clipping path for inner area only -->
+        <clipPath id="inner-area-clip-${keycap.id}">
+          <rect
+            x="${keycapShape.legendArea.x * scale}"
+            y="${keycapShape.legendArea.y * scale}"
+            width="${keycapShape.legendArea.width * scale}"
+            height="${keycapShape.legendArea.height * scale}"
+            rx="${3 * scale}"
+          />
+        </clipPath>
       </defs>
 
-      <!-- Base layer - darker version -->
-      <rect
-        x="0"
-        y="0"
-        width="${width}"
-        height="${height}"
-        rx="${BORDER_RADIUS}"
-        fill="url(#base-gradient-${keycap.id})"
-        stroke="rgba(0, 0, 0, 0.15)"
-        stroke-width="1"
-        filter="url(#shadow-${keycap.id})"
-      />
-
-      <!-- Inner square - main keycap color -->
-      <rect
-        x="${innerLeft}"
-        y="${innerTop}"
-        width="${innerWidth}"
-        height="${innerHeight}"
-        rx="${INNER_RADIUS}"
-        fill="url(#main-gradient-${keycap.id})"
-      />
+      <!-- Keycap shape with colors -->
+      <g transform="scale(${scale})">
+        ${keycapShape.svgPath}
+      </g>
 
       <!-- Border ring if selected -->
       ${showBorder ? `

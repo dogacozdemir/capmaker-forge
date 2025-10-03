@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { KeyboardLayout, KeycapLayer } from '@/types/keyboard';
 import KeycapPreview from './KeycapPreview';
+import SVGKeycapPreview from './SVGKeycapPreview';
 import KeyLayerPreview from './KeyLayerPreview';
 
 interface KeyboardPreviewProps {
@@ -16,6 +17,7 @@ interface KeyboardPreviewProps {
   onLayerSelect?: (layerId: string) => void;
   onAddTextLayer?: () => void;
   onAddImageLayer?: () => void;
+  useSVGKeycaps?: boolean;
 }
 
 const KeyboardPreview: React.FC<KeyboardPreviewProps> = ({
@@ -31,6 +33,7 @@ const KeyboardPreview: React.FC<KeyboardPreviewProps> = ({
   onLayerSelect,
   onAddTextLayer,
   onAddImageLayer,
+  useSVGKeycaps = false,
 }) => {
   const UNIT = 48;
   const BASE_SCALE = 1.1;
@@ -225,22 +228,27 @@ const KeyboardPreview: React.FC<KeyboardPreviewProps> = ({
             }}
           >
             {/* Keycaps */}
-            {layout.keys.map((keycap) => (
-              <KeycapPreview
-                key={keycap.id}
-                ref={(el) => {
+            {layout.keys.map((keycap) => {
+              const commonProps = {
+                ref: (el: HTMLDivElement | null) => {
                   if (keyRefs) {
                     keyRefs.current[keycap.id] = el;
                   }
-                }}
-                keycap={keycap}
-                selected={selectedKeys.includes(keycap.id)}
-                previewSelected={previewKeys.includes(keycap.id)}
-                onClick={(event) => onKeySelect(keycap.id, event)}
-                onDoubleClick={() => onKeyDoubleClick(keycap.id)}
-                scale={BASE_SCALE}
-              />
-            ))}
+                },
+                keycap,
+                selected: selectedKeys.includes(keycap.id),
+                previewSelected: previewKeys.includes(keycap.id),
+                onClick: (event: React.MouseEvent) => onKeySelect(keycap.id, event),
+                onDoubleClick: () => onKeyDoubleClick(keycap.id),
+                scale: BASE_SCALE,
+              };
+
+              return useSVGKeycaps ? (
+                <SVGKeycapPreview key={keycap.id} {...commonProps} />
+              ) : (
+                <KeycapPreview key={keycap.id} {...commonProps} />
+              );
+            })}
 
             {/* Layer Preview */}
             {editingKeyId &&

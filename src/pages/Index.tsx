@@ -8,7 +8,7 @@ import DragSelection from '@/components/DragSelection';
 import FloatingToolbar from '@/components/FloatingToolbar';
 import LayerManager from '@/components/LayerManager';
 import ExportPanel from '@/components/ExportPanel';
-import { Box, Monitor, ShoppingCart, User, Download, FileImage } from 'lucide-react';
+import { Box, Monitor, ShoppingCart, User, Download, FileImage, ToggleLeft, ToggleRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { KeycapLayer } from '@/types/keyboard';
@@ -20,6 +20,8 @@ const Index = () => {
     config,
     editingKeyId,
     selectedLayerId,
+    useSVGKeycaps,
+    setUseSVGKeycaps,
     changeLayout,
     selectKey,
     selectKeys,
@@ -168,6 +170,19 @@ const Index = () => {
               <Button
                 variant="ghost"
                 size="icon"
+                onClick={() => setUseSVGKeycaps(!useSVGKeycaps)}
+                className="h-10 w-10 text-muted-foreground hover:text-foreground hover:bg-muted"
+                title={useSVGKeycaps ? "Switch to CSS Keycaps" : "Switch to SVG Keycaps"}
+              >
+                {useSVGKeycaps ? (
+                  <ToggleRight className="h-5 w-5 text-primary" />
+                ) : (
+                  <ToggleLeft className="h-5 w-5" />
+                )}
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => setView3D(!view3D)}
                 className="h-10 w-10 text-muted-foreground hover:text-foreground hover:bg-muted"
                 title={view3D ? "Switch to 2D View" : "Switch to 3D View"}
@@ -276,6 +291,7 @@ const Index = () => {
                       onAddImageLayer={() => {
                         editingKeyId && addLayer(editingKeyId, 'image');
                       }}
+                      useSVGKeycaps={useSVGKeycaps}
                     />
                   </DragSelection>
                 )}
